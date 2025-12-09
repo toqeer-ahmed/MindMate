@@ -1,27 +1,27 @@
+
 import React from 'react';
 import { Brain, CheckCircle, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import heroBg from '../assets/hero-bg.png';
 
 const Home = () => {
     return (
         <div className="flex flex-col items-center">
             {/* Hero Section */}
-            <section className="w-full relative bg-gradient-to-b from-blue-100 to-green-50 overflow-hidden py-24 px-6 md:px-12 lg:px-24">
-                {/* Decorative Background Elements (Abstract representation of the image) */}
-                <div className="absolute top-0 left-0 w-full h-full opacity-30 pointer-events-none">
-                    <div className="absolute -top-20 -left-20 w-96 h-96 bg-green-200 rounded-full blur-3xl"></div>
-                    <div className="absolute top-1/4 right-0 w-80 h-80 bg-blue-200 rounded-full blur-3xl"></div>
-                    <div className="absolute bottom-0 left-1/3 w-full h-64 bg-gradient-to-t from-white to-transparent"></div>
+            <section className="w-full relative overflow-hidden py-32 px-6 md:px-12 lg:px-24">
+                {/* Background Image with Overlay */}
+                <div className="absolute top-0 left-0 w-full h-full">
+                    <img src={heroBg} alt="Campus" className="w-full h-full object-cover" />
+                    <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-b from-white/80 via-white/60 to-white dark:from-slate-900/90 dark:via-slate-900/80 dark:to-background"></div>
                 </div>
 
                 <div className="relative z-10 max-w-4xl mx-auto text-center flex flex-col items-center">
-                    <div className="mb-6 p-4 bg-white/50 backdrop-blur-sm rounded-full shadow-sm">
-                        <Brain className="w-20 h-20 text-primary" strokeWidth={1.5} />
-                    </div>
-                    <h1 className="text-5xl md:text-6xl font-extrabold text-text-main mb-4 tracking-tight">
+                    {/* Floating Brain Icon Removed - Logo is now big in Navbar or can be kept here if desired, but text is focus */}
+
+                    <h1 className="text-5xl md:text-7xl font-extrabold text-text-main mb-6 tracking-tight drop-shadow-sm">
                         MindMate
                     </h1>
-                    <p className="text-xl md:text-2xl text-text-muted font-medium max-w-2xl leading-relaxed">
+                    <p className="text-xl md:text-2xl text-text-muted font-medium max-w-2xl leading-relaxed mb-10">
                         Your Campus Wellness <br className="hidden md:block" />& Productivity Companion
                     </p>
 
