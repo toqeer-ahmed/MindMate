@@ -1,0 +1,23 @@
+# Global
+**/.DS_Store
+**/.idea
+**/.vscode
+**/*.log
+
+# Frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/*.local
+
+# Backend (Java/Spring)
+backend/target/
+backend/**/*.class
+
+# ML Service (Python)
+ml_service/venv/
+ml_service/__pycache__/
+ml_service/DATASET/
+# Large models (GitHub limit 100MB, warning >50MB) - Comment out if using LFS
+ml_service/*.h5
+ml_service/*.keras
+ml_service/training_history.png

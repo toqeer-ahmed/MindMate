@@ -1,0 +1,93 @@
+@startuml
+
+package "Domain Layer" {
+    abstract class User {
+        +Long id
+        +String email
+        +String password
+        +Role role
+    }
+    class Student extends User {
+        +String studentId
+        +String department
+    }
+    class Advisor extends User {
+        +String officeLocation
+    }
+    class MoodEntry {
+        +int moodScore
+        +String moodLabel
+        +LocalDateTime timestamp
+    }
+    class JournalEntry {
+        +String title
+        +String content
+        +String moodTag
+    }
+    class Task {
+        +String title
+        +TaskStatus status
+        +TaskPriority priority
+    }
+    
+    Student "1" -- "*" MoodEntry
+    Student "1" -- "*" JournalEntry
+    Student "1" -- "*" Task
+}
+
+package "Service Layer" {
+    class UserService
+    class MoodService
+    class JournalService
+    class TaskService
+    class AdvisorService
+    
+    interface MoodObserver {
+        +onMoodUpdate(MoodEntry)
+    }
+    
+    class BurnoutDetectionEngine implements MoodObserver
+    class NotificationService implements MoodObserver
+    class JournalPromptGenerator implements MoodObserver
+    
+    MoodService o-- MoodObserver
+}
+
+package "Pattern: Strategy" {
+    interface BurnoutDetectionStrategy {
+        +detectBurnout(Student)
+    }
+    class ThresholdBurnoutStrategy implements BurnoutDetectionStrategy
+    class MLBurnoutStrategy implements BurnoutDetectionStrategy
+    class PatternBurnoutStrategy implements BurnoutDetectionStrategy
+    
+    BurnoutDetectionEngine --> BurnoutDetectionStrategy
+}
+
+package "Pattern: Factory & Adapter" {
+    class NotificationFactory {
+        +getNotificationService(type): NotificationAdapter
+    }
+    interface NotificationAdapter {
+        +sendNotification(recipient, message)
+    }
+    class TwilioAdapter implements NotificationAdapter
+    class FirebaseAdapter implements NotificationAdapter
+    class SendGridAdapter implements NotificationAdapter
+    
+    NotificationService --> NotificationFactory
+}
+
+package "Pattern: Template Method" {
+    abstract class BaseBurnoutDetectionTemplate {
+        +checkBurnout(Student)
+        #loadStudentData()
+        #analyzeData()
+        #notifyAdvisor()
+    }
+    class DailyBurnoutDetection extends BaseBurnoutDetectionTemplate
+    
+    BurnoutDetectionEngine --> DailyBurnoutDetection
+}
+
+@enduml
