@@ -35,8 +35,8 @@ const Navbar = () => {
         <nav className="w-full bg-surface/80 backdrop-blur-md sticky top-0 z-50 px-6 py-4 shadow-sm border-b border-surface/50 dark:border-white/5 transition-colors duration-300">
             <div className="max-w-7xl mx-auto flex items-center justify-between">
                 {/* Logo */}
-                <Link to="/" className="flex items-center gap-3 group">
-                    <img src={logo} alt="MindMate Logo" className="w-10 h-10 object-contain group-hover:scale-110 transition-transform" />
+                <Link to="/" className="flex items-center gap-2 group">
+                    <img src={logo} alt="MindMate Logo" className="w-9 h-9 object-contain group-hover:scale-110 transition-transform" />
                     <span className="text-2xl font-bold text-text-main">MindMate</span>
                 </Link>
 

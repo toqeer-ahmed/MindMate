@@ -30,9 +30,9 @@ const Home = () => {
                         <span className="text-sm font-semibold text-text-muted uppercase tracking-wider">Now with AI Mood Detection</span>
                     </div>
 
-                    <div className="flex items-center justify-center gap-4 mb-6 flex-wrap">
-                        <img src={logo} alt="MindMate Logo" className="w-16 h-16 md:w-20 md:h-20 object-contain drop-shadow-lg" />
-                        <h1 className="text-6xl md:text-8xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-dark to-secondary drop-shadow-sm">
+                    <div className="flex items-center justify-center gap-2 mb-6 flex-wrap">
+                        <img src={logo} alt="MindMate Logo" className="w-12 h-12 md:w-20 md:h-20 object-contain drop-shadow-lg" />
+                        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-primary via-primary-dark to-secondary drop-shadow-sm">
                             MindMate
                         </h1>
                     </div>
