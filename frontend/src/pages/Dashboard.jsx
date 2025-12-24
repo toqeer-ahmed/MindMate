@@ -7,14 +7,8 @@ import { Smile, Frown, Meh, Plus, MoreHorizontal, Calendar as CalendarIcon, Chev
 
 const Dashboard = () => {
     const { user } = useAuthStore();
-    const [moodHistory, setMoodHistory] = useState([
-        { day: 'Mon', score: 65 }, { day: 'Tue', score: 59 }, { day: 'Wed', score: 80 }, { day: 'Thu', score: 81 }, { day: 'Fri', score: 56 }, { day: 'Sat', score: 95 }, { day: 'Sun', score: 60 }
-    ]); // Mock data for chart visualization matching image
-    const [tasks, setTasks] = useState([
-        { id: 1, title: 'Check emails', completed: false, time: '8:00 AM' },
-        { id: 2, title: 'Lecture prep', completed: true, time: '10:00 AM' },
-        { id: 3, title: 'Gym session', completed: false, time: '5:00 PM' },
-    ]);
+    const [moodHistory, setMoodHistory] = useState([]);
+    const [tasks, setTasks] = useState([]);
 
     // Mock Calendar Data
     const currentDate = new Date();

@@ -1,10 +1,12 @@
-
 import React from 'react';
 import { Brain, CheckCircle, Activity } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import heroBg from '../assets/hero-bg.png';
+import { useAuthStore } from '../store/authStore';
 
 const Home = () => {
+    const { token } = useAuthStore();
+
     return (
         <div className="flex flex-col items-center">
             {/* Hero Section */}
@@ -26,12 +28,20 @@ const Home = () => {
                     </p>
 
                     <div className="mt-10 flex gap-4">
-                        <Link to="/signup" className="px-8 py-3.5 rounded-full bg-primary text-white text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 transition-all">
-                            Get Started
-                        </Link>
-                        <Link to="/login" className="px-8 py-3.5 rounded-full bg-white text-primary text-lg font-bold shadow-md hover:bg-gray-50 hover:scale-105 transition-all">
-                            Log In
-                        </Link>
+                        {token ? (
+                            <Link to="/dashboard" className="px-8 py-3.5 rounded-full bg-primary text-white text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 transition-all">
+                                Go to Dashboard
+                            </Link>
+                        ) : (
+                            <>
+                                <Link to="/signup" className="px-8 py-3.5 rounded-full bg-primary text-white text-lg font-bold shadow-lg shadow-primary/30 hover:bg-primary-dark hover:scale-105 transition-all">
+                                    Get Started
+                                </Link>
+                                <Link to="/login" className="px-8 py-3.5 rounded-full bg-white text-primary text-lg font-bold shadow-md hover:bg-gray-50 hover:scale-105 transition-all">
+                                    Log In
+                                </Link>
+                            </>
+                        )}
                     </div>
                 </div>
             </section>
