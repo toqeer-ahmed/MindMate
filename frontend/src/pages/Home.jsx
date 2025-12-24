@@ -4,11 +4,14 @@ import { Link } from 'react-router-dom';
 import heroBg from '../assets/hero-bg.png';
 import { useAuthStore } from '../store/authStore';
 
+import Navbar from '../components/Navbar';
+
 const Home = () => {
     const { token } = useAuthStore();
 
     return (
         <div className="flex flex-col items-center">
+            <Navbar />
             {/* Hero Section */}
             <section className="w-full relative overflow-hidden py-32 px-6 md:px-12 lg:px-24">
                 {/* Background Image with Overlay */}
