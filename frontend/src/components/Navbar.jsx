@@ -1,12 +1,13 @@
 import React, { useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { User, Moon, Sun } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
-import logo from '../assets/logo.png';
+import logo from '../assets/logo2.png';
 
 const Navbar = () => {
     const location = useLocation();
+    const navigate = useNavigate();
     const token = useAuthStore((state) => state.token);
     const logout = useAuthStore((state) => state.logout);
     const { theme, toggleTheme } = useThemeStore();
@@ -18,6 +19,11 @@ const Navbar = () => {
             document.documentElement.classList.remove('dark');
         }
     }, [theme]);
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
 
     const isActive = (path) => {
         return location.pathname === path
@@ -60,7 +66,7 @@ const Navbar = () => {
                                 <User className="w-5 h-5" />
                             </Link>
                             <button
-                                onClick={logout}
+                                onClick={handleLogout}
                                 className="hidden lg:block px-5 py-2 rounded-full border border-primary text-primary font-medium hover:bg-primary/5 transition-colors"
                             >
                                 Log Out
