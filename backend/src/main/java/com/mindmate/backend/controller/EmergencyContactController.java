@@ -4,14 +4,16 @@ import com.mindmate.backend.domain.EmergencyContact;
 import com.mindmate.backend.service.EmergencyContactService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/emergency-contacts")
+@RequestMapping("/api/emergency-contacts")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('STUDENT')")
 public class EmergencyContactController {
 
     private final EmergencyContactService contactService;

@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/academic")
+@RequestMapping("/api/courses")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequiredArgsConstructor
 @PreAuthorize("hasRole('STUDENT')")
@@ -20,7 +20,7 @@ public class AcademicController {
 
     private final AcademicService academicService;
 
-    @PostMapping("/courses")
+    @PostMapping
     public ResponseEntity<Course> addCourse(
             @RequestBody Course course,
             Authentication authentication
@@ -28,7 +28,7 @@ public class AcademicController {
         return ResponseEntity.ok(academicService.addCourse(authentication.getName(), course));
     }
 
-    @PostMapping("/courses/{courseId}/assessments")
+    @PostMapping("/{courseId}/assessments")
     public ResponseEntity<Course> addAssessment(
             @PathVariable Long courseId,
             @RequestBody Assessment assessment
@@ -36,7 +36,7 @@ public class AcademicController {
         return ResponseEntity.ok(academicService.addAssessment(courseId, assessment));
     }
 
-    @GetMapping("/courses")
+    @GetMapping
     public ResponseEntity<List<Course>> getCourses(
             Authentication authentication
     ) {

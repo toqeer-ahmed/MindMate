@@ -26,7 +26,7 @@ const AcademicTracker = () => {
 
     const fetchCourses = async () => {
         try {
-            const res = await api.get('/academic/courses');
+            const res = await api.get('/courses');
             setCourses(res.data || []);
         } catch (error) {
             console.error("Failed to fetch courses", error);
@@ -40,7 +40,7 @@ const AcademicTracker = () => {
                 ...newCourse,
                 creditHours: parseInt(newCourse.creditHours, 10)
             };
-            await api.post('/academic/courses', payload);
+            await api.post('/courses', payload);
             setNewCourse({ courseName: '', creditHours: 3 });
             setShowCourseForm(false);
             fetchCourses();
@@ -62,7 +62,7 @@ const AcademicTracker = () => {
                 obtainedMarks: parseFloat(newAssessment.obtainedMarks),
                 weightage: parseFloat(newAssessment.weightage)
             };
-            await api.post(`/academic/courses/${selectedCourse.id}/assessments`, payload);
+            await api.post(`/courses/${selectedCourse.id}/assessments`, payload);
             // Reset and refresh
             setNewAssessment({ name: '', type: 'QUIZ', totalMarks: 10, obtainedMarks: 0, weightage: 10 });
             setShowAssessmentForm(false);

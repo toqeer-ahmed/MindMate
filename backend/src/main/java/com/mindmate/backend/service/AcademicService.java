@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -32,6 +33,9 @@ public class AcademicService {
                 .orElseThrow(() -> new RuntimeException("Course not found"));
         
         assessment.setCourse(course);
+        if (course.getAssessments() == null) {
+            course.setAssessments(new ArrayList<>());
+        }
         course.getAssessments().add(assessment);
         
         Course savedCourse = courseRepository.save(course);

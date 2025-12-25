@@ -8,7 +8,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Arrays;
 
 @Component
 @RequiredArgsConstructor
@@ -17,6 +16,7 @@ public class DataSeeder implements CommandLineRunner {
     private final StudentRepository studentRepository;
     private final AdvisorRepository advisorRepository;
     private final CourseRepository courseRepository;
+    private final AssessmentRepository assessmentRepository;
     private final EncryptionService encryptionService;
     private final MoodRepository moodRepository;
     private final TaskRepository taskRepository;
@@ -63,8 +63,8 @@ public class DataSeeder implements CommandLineRunner {
         createCourse(student, "Linear Algebra", 3, 78.5);
 
         // 4. Add Mood Entries (Last 10 days)
-        createMood(student, 8.5, "Feeling great about the project!", 0); // Today
-        createMood(student, 6.0, "A bit tired.", 1); // Yesterday
+        createMood(student, 8.5, "Feeling great about the project!", 0);
+        createMood(student, 6.0, "A bit tired.", 1);
         createMood(student, 3.5, "Stressed due to deadlines.", 2);
         createMood(student, 7.0, "Recovering, good workout.", 3);
         createMood(student, 6.5, "Normal day.", 4);
@@ -75,9 +75,9 @@ public class DataSeeder implements CommandLineRunner {
         createMood(student, 9.0, "Celebrated birthday!", 9);
 
         // 5. Add Tasks
-        createTask(student, "Submit SDA Assignment 3", "2025-12-28", "ACADEMIC", false);
-        createTask(student, "Morning Run", "2025-12-27", "WELLNESS", true);
-        createTask(student, "Doctor Appointment", "2025-12-30", "PERSONAL", false);
+        createTask(student, "Submit SDA Assignment 3", "2025-12-28", false);
+        createTask(student, "Morning Run", "2025-12-27", true);
+        createTask(student, "Doctor Appointment", "2025-12-30", false);
 
         // 6. Add Journal
         createJournal(student, "My Reflection", "Today was a productive day. I finally fixed the backend issues in the project. The team is happy.");
@@ -99,30 +99,48 @@ public class DataSeeder implements CommandLineRunner {
         course = courseRepository.save(course);
         
         // Add fake assessments
-        Assessment a1 = Assessment.builder().name("Quiz 1").type("QUIZ").totalMarks(10).obtainedMarks(dummyMarks > 90 ? 9 : 8).weightage(10).course(course).build();
-        Assessment a2 = Assessment.builder().name("Midterm").type("MIDTERM").totalMarks(50).obtainedMarks(dummyMarks > 80 ? 42 : 35).weightage(30).course(course).build();
-        course.setAssessments(Arrays.asList(a1, a2));
-        courseRepository.save(course);
+        Assessment a1 = Assessment.builder()
+                .name("Quiz 1")
+                .type(AssessmentType.QUIZ)
+                .totalMarks(10)
+                .obtainedMarks(dummyMarks > 90 ? 9 : 8)
+                .weightage(10)
+                .course(course)
+                .build();
+        assessmentRepository.save(a1);
+        
+        Assessment a2 = Assessment.builder()
+                .name("Midterm")
+                .type(AssessmentType.MIDTERM)
+                .totalMarks(50)
+                .obtainedMarks(dummyMarks > 80 ? 42 : 35)
+                .weightage(30)
+                .course(course)
+                .build();
+        assessmentRepository.save(a2);
     }
 
     private void createMood(Student student, double score, String note, int daysAgo) {
         MoodEntry mood = MoodEntry.builder()
                 .student(student)
-                .moodScore(score)
+                .moodScore((int) score)
                 .note(note)
                 .timestamp(LocalDateTime.now().minusDays(daysAgo))
                 .build();
         moodRepository.save(mood);
     }
 
-    private void createTask(Student student, String title, String date, String category, boolean completed) {
+    private void createTask(Student student, String title, String date, boolean completed) {
         Task task = Task.builder()
                 .student(student)
                 .title(title)
                 .dueDate(java.time.LocalDate.parse(date))
-                .category(category)
-                .completed(completed)
+                .status(completed ? TaskStatus.DONE : TaskStatus.TODO)
+                .priority(TaskPriority.MEDIUM)
                 .build();
+        if (completed) {
+            task.setCompletedAt(LocalDateTime.now());
+        }
         taskRepository.save(task);
     }
 
@@ -130,8 +148,8 @@ public class DataSeeder implements CommandLineRunner {
         JournalEntry entry = JournalEntry.builder()
                 .student(student)
                 .title(title)
-                .content(encryptionService.encrypt(content)) // Encrypt content
-                .timestamp(LocalDateTime.now())
+                .content(encryptionService.encrypt(content))
+                .createdAt(LocalDateTime.now())
                 .build();
         journalRepository.save(entry);
     }

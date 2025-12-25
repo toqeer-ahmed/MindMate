@@ -13,13 +13,13 @@ import java.util.List;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/v1/alerts")
+@RequestMapping("/api/alerts")
 @RequiredArgsConstructor
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class AlertController {
 
     private final AlertService alertService;
-    private final AdvisorService advisorService; // Re-using service logic
+    private final AdvisorService advisorService;
 
     // STUDENT: Get my alerts
     @GetMapping("/student")
