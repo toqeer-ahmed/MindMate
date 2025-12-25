@@ -14,6 +14,7 @@ import java.util.Map;
 @RequestMapping("/api/v1/advisor")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('ADVISOR')")
 public class AdvisorController {
 
     private final AdvisorService advisorService;

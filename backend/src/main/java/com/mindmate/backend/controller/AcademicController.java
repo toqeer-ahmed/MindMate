@@ -5,6 +5,7 @@ import com.mindmate.backend.domain.Course;
 import com.mindmate.backend.service.AcademicService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +15,7 @@ import java.util.List;
 @RequestMapping("/api/v1/academic")
 @CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequiredArgsConstructor
+@PreAuthorize("hasRole('STUDENT')")
 public class AcademicController {
 
     private final AcademicService academicService;
