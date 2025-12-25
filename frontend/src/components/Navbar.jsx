@@ -1,16 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { User, Moon, Sun } from 'lucide-react';
+import { User, Moon, Sun, Bell, Check, X } from 'lucide-react';
 import { useAuthStore } from '../store/authStore';
 import { useThemeStore } from '../store/themeStore';
 import logo from '../assets/logo2.png';
+import api from '../services/api';
 
 const Navbar = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const token = useAuthStore((state) => state.token);
-    const logout = useAuthStore((state) => state.logout);
+    const { token, user, logout } = useAuthStore();
     const { theme, toggleTheme } = useThemeStore();
+
+    const [alerts, setAlerts] = useState([]);
+    const [showAlerts, setShowAlerts] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     useEffect(() => {
         if (theme === 'dark') {
@@ -19,6 +23,34 @@ const Navbar = () => {
             document.documentElement.classList.remove('dark');
         }
     }, [theme]);
+
+    useEffect(() => {
+        if (token) {
+            fetchAlerts();
+            const interval = setInterval(fetchAlerts, 60000); // Poll every minute
+            return () => clearInterval(interval);
+        }
+    }, [token]);
+
+    const fetchAlerts = async () => {
+        try {
+            const res = await api.get('/alerts');
+            setAlerts(res.data);
+            setUnreadCount(res.data.filter(a => !a.read).length);
+        } catch (error) {
+            // silent fail
+        }
+    };
+
+    const markAsRead = async (id) => {
+        try {
+            await api.put(`/alerts/${id}/read`);
+            setAlerts(alerts.map(a => a.id === id ? { ...a, read: true } : a));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (error) {
+            console.error(error);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -41,11 +73,22 @@ const Navbar = () => {
                 </Link>
 
                 {/* Navigation Links - Centered */}
-                <div className="hidden md:flex items-center gap-8 text-lg font-medium">
-                    <Link to="/" className={isActive('/')}>Home</Link>
-                    <Link to="/dashboard" className={isActive('/dashboard')}>Dashboard</Link>
-                    <Link to="/resources" className={isActive('/resources')}>Resources</Link>
-                    <Link to="/profile" className={isActive('/profile')}>Profile</Link>
+                <div className="hidden md:flex items-center gap-6 text-lg font-medium">
+                    {!user?.role || user.role === 'STUDENT' ? (
+                        <>
+                            <Link to="/" className={isActive('/')}>Home</Link>
+                            <Link to="/dashboard" className={isActive('/dashboard')}>Dashboard</Link>
+                            <Link to="/academic" className={isActive('/academic')}>Academic</Link>
+                            <Link to="/resources" className={isActive('/resources')}>Resources</Link>
+                            <Link to="/profile" className={isActive('/profile')}>Profile</Link>
+                        </>
+                    ) : (
+                        // Advisor Links
+                        <>
+                            <Link to="/advisor" className={isActive('/advisor')}>Advisor Portal</Link>
+                            <Link to="/profile" className={isActive('/profile')}>Profile</Link>
+                        </>
+                    )}
                 </div>
 
                 {/* Right Side Actions */}
@@ -58,6 +101,55 @@ const Navbar = () => {
                     >
                         {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                     </button>
+
+                    {/* Notifications */}
+                    {token && (
+                        <div className="relative">
+                            <button
+                                onClick={() => setShowAlerts(!showAlerts)}
+                                className="p-2 relative text-text-muted hover:text-primary transition-colors"
+                            >
+                                <Bell size={20} />
+                                {unreadCount > 0 && (
+                                    <span className="absolute top-0 right-0 w-2.5 h-2.5 bg-red-500 rounded-full border border-white animate-pulse" />
+                                )}
+                            </button>
+
+                            {/* Dropdown */}
+                            {showAlerts && (
+                                <div className="absolute right-0 mt-2 w-80 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden animate-in fade-in slide-in-from-top-2 z-50">
+                                    <div className="p-3 bg-gray-50 border-b border-gray-100 flex justify-between items-center">
+                                        <h4 className="font-bold text-gray-700 text-sm">Notifications</h4>
+                                        <button onClick={() => setShowAlerts(false)}><X size={16} className="text-gray-400" /></button>
+                                    </div>
+                                    <div className="max-h-64 overflow-y-auto">
+                                        {alerts.length > 0 ? (
+                                            alerts.map(alert => (
+                                                <div key={alert.id} className={`p-4 border-b border-gray-50 last:border-none hover:bg-gray-50 transition-colors ${!alert.read ? 'bg-blue-50/50' : ''}`}>
+                                                    <p className="text-sm text-gray-800 font-medium mb-1">{alert.message}</p>
+                                                    <div className="flex justify-between items-center mt-2">
+                                                        <span className="text-xs text-gray-400">{new Date(alert.timestamp).toLocaleDateString()}</span>
+                                                        {!alert.read && (
+                                                            <button
+                                                                onClick={() => markAsRead(alert.id)}
+                                                                className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+                                                            >
+                                                                <Check size={12} /> Mark as read
+                                                            </button>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <div className="p-8 text-center text-gray-400 text-sm">
+                                                No notifications
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     {/* Auth Buttons */}
                     {token ? (

@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Smile, Frown, Meh, Plus, MoreHorizontal, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Camera, Upload, Loader, X, CheckCircle, Circle } from 'lucide-react';
+import { Smile, Frown, Meh, Plus, MoreHorizontal, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Camera, Upload, Loader, X, CheckCircle, Circle, BookOpen, Activity } from 'lucide-react';
 import Webcam from 'react-webcam';
 import axios from 'axios';
 
@@ -37,6 +37,25 @@ const Dashboard = () => {
         { icon: Frown, color: 'text-blue-400', bg: 'bg-blue-100', label: 'Sad', score: 3 },
         { icon: Smile, color: 'text-orange-400', bg: 'bg-orange-100', label: 'Surprise', score: 7 },
     ];
+
+    // Calendar & Summary State
+    const [selectedDate, setSelectedDate] = useState(null);
+    const [dailySummary, setDailySummary] = useState(null);
+    const [loadingSummary, setLoadingSummary] = useState(false);
+
+    const handleDayClick = async (dateStr) => {
+        setSelectedDate(dateStr);
+        setLoadingSummary(true);
+        setDailySummary(null);
+        try {
+            const res = await api.get(`/calendar/summary?date=${dateStr}`);
+            setDailySummary(res.data);
+        } catch (error) {
+            console.error("Failed to fetch daily summary", error);
+        } finally {
+            setLoadingSummary(false);
+        }
+    };
 
     useEffect(() => {
         fetchDashboardData();
@@ -434,17 +453,34 @@ const Dashboard = () => {
                             <span>Su</span><span>Mo</span><span>Tu</span><span>We</span><span>Th</span><span>Fr</span><span>Sa</span>
                         </div>
                         <div className="grid grid-cols-7 gap-1 text-center text-sm">
-                            {/* Simple mock calendar grid */}
+                            {/* Simple mock calendar grid offset */}
                             {Array.from({ length: 4 }).map((_, i) => <span key={`empty-${i}`} />)}
-                            {daysInMonth.map(day => (
-                                <div
-                                    key={day}
-                                    className={`aspect-square flex items-center justify-center rounded-full cursor-pointer hover:bg-gray-100 ${day === currentDay ? 'bg-primary text-white hover:bg-primary' : (day === 18 ? 'bg-blue-100 text-blue-600 font-bold' : 'text-text-main')}`}
-                                >
-                                    {day}
-                                </div>
-                            ))}
+                            {daysInMonth.map(day => {
+                                // Construct date string YYYY-MM-DD
+                                const dateStr = `2025-12-${String(day).padStart(2, '0')}`;
+                                return (
+                                    <div
+                                        key={day}
+                                        onClick={() => handleDayClick(dateStr)}
+                                        className={`aspect-square flex items-center justify-center rounded-full cursor-pointer hover:bg-gray-100 transition-all ${day === currentDay ? 'bg-primary text-white hover:bg-primary shadow-md' : 'text-text-main'}`}
+                                    >
+                                        {day}
+                                    </div>
+                                );
+                            })}
                         </div>
+                    </div>
+
+                    {/* Academic Tracker Quick Link */}
+                    <div className="bg-gradient-to-br from-indigo-500 to-purple-600 p-6 rounded-[1.5rem] shadow-lg text-white relative overflow-hidden group cursor-pointer" onClick={() => window.location.href = '/academic'}>
+                        <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                            <BookOpen size={100} />
+                        </div>
+                        <h3 className="text-lg font-bold mb-1">Academic Tracker</h3>
+                        <p className="text-indigo-100 text-sm mb-4">Manage courses & grades</p>
+                        <button className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg text-sm font-semibold backdrop-blur-sm transition-colors">
+                            View Grades
+                        </button>
                     </div>
 
                     {/* Mood Tracker Manual Input */}
@@ -465,6 +501,98 @@ const Dashboard = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Daily Summary Modal */}
+            {selectedDate && (
+                <div className="fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200">
+                    <div className="bg-white rounded-[2rem] shadow-2xl w-full max-w-lg overflow-hidden transform transition-all scale-100 max-h-[90vh] overflow-y-auto">
+                        <div className="bg-primary/5 p-6 border-b border-primary/10 flex justify-between items-start">
+                            <div>
+                                <h3 className="text-2xl font-bold text-gray-900">{new Date(selectedDate).toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' })}</h3>
+                                <p className="text-primary font-medium">Daily Wellness Summary</p>
+                            </div>
+                            <button onClick={() => setSelectedDate(null)} className="p-2 hover:bg-white rounded-full transition-colors text-gray-500 hover:text-red-500">
+                                <X size={24} />
+                            </button>
+                        </div>
+
+                        {loadingSummary ? (
+                            <div className="p-10 flex flex-col items-center justify-center text-gray-400">
+                                <Loader size={40} className="animate-spin mb-4 text-primary" />
+                                <p>Loading history...</p>
+                            </div>
+                        ) : dailySummary ? (
+                            <div className="p-6 space-y-6">
+                                {/* Score Card */}
+                                <div className="flex items-center justify-between bg-gradient-to-r from-primary to-indigo-600 rounded-2xl p-6 text-white shadow-lg">
+                                    <div>
+                                        <p className="text-indigo-100 font-medium mb-1">Wellness Score</p>
+                                        <p className="text-4xl font-extrabold">{dailySummary.wellnessScore?.toFixed(0) || 0}</p>
+                                    </div>
+                                    <div className="h-16 w-16 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                        <Activity size={32} />
+                                    </div>
+                                </div>
+
+                                {/* Moods */}
+                                <div>
+                                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><Smile size={18} /> Mood Logs</h4>
+                                    {dailySummary.moodEntries?.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {dailySummary.moodEntries.map(mood => (
+                                                <div key={mood.id} className="bg-gray-50 p-3 rounded-xl flex items-center justify-between">
+                                                    <span className="font-medium text-gray-700">{mood.moodLabel}</span>
+                                                    <span className="text-xs text-gray-400">{new Date(mood.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-400 text-sm italic">No mood logs for this day.</p>
+                                    )}
+                                </div>
+
+                                {/* Tasks */}
+                                <div>
+                                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><CheckCircle size={18} /> Tasks Completed</h4>
+                                    {dailySummary.completedTasks?.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {dailySummary.completedTasks.map(task => (
+                                                <div key={task.id} className="bg-green-50 p-3 rounded-xl border border-green-100 flex items-center gap-2">
+                                                    <CheckCircle size={16} className="text-green-600" />
+                                                    <span className="text-green-900 font-medium text-sm">{task.title}</span>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-400 text-sm italic">No tasks completed on this day.</p>
+                                    )}
+                                </div>
+
+                                {/* Journals */}
+                                <div>
+                                    <h4 className="font-bold text-gray-800 mb-3 flex items-center gap-2"><BookOpen size={18} /> Journal Entries</h4>
+                                    {dailySummary.journalEntries?.length > 0 ? (
+                                        <div className="space-y-2">
+                                            {dailySummary.journalEntries.map(entry => (
+                                                <div key={entry.id} className="bg-indigo-50 p-3 rounded-xl border border-indigo-100">
+                                                    <p className="font-bold text-indigo-900 text-sm">{entry.title}</p>
+                                                    <p className="text-indigo-700 text-xs mt-1 truncate">Locked Content</p>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <p className="text-gray-400 text-sm italic">No journal entries found.</p>
+                                    )}
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="p-10 text-center text-gray-500">
+                                <p>Failed to load data.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </Layout>
     );
 };

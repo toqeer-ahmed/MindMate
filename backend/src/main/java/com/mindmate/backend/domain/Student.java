@@ -2,6 +2,7 @@ package com.mindmate.backend.domain;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Table;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,4 +32,10 @@ public class Student extends User {
 
     @OneToMany(mappedBy = "student")
     private List<EmergencyContact> emergencyContacts;
+
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Course> courses;
+
+    @OneToMany(mappedBy = "student", cascade = CascadeType.ALL)
+    private List<Alert> alerts;
 }

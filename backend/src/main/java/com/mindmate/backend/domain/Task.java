@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -32,4 +33,6 @@ public class Task {
     
     @Enumerated(EnumType.STRING)
     private TaskPriority priority; // LOW, MEDIUM, HIGH
+
+    private LocalDateTime completedAt;
 }

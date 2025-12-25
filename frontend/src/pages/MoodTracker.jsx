@@ -1,7 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from '../components/Layout';
 import api from '../services/api';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Camera, Upload, RefreshCw, Save, Smile, Frown, Meh, AlertCircle, CheckCircle } from 'lucide-react';
+import Webcam from 'react-webcam';
+import axios from 'axios';
 
 const MoodTracker = () => {
     const [moodScore, setMoodScore] = useState(5);
@@ -9,149 +12,100 @@ const MoodTracker = () => {
     const [history, setHistory] = useState([]);
     const [loading, setLoading] = useState(false);
 
-    // AI Mood Detection State
-    const [showCamera, setShowCamera] = useState(false);
+    // AI Mode: 'camera' | 'upload' | null
+    const [aiMode, setAiMode] = useState(null);
     const [detecting, setDetecting] = useState(false);
-    const videoRef = React.useRef(null);
-    const canvasRef = React.useRef(null);
+    const [capturedImage, setCapturedImage] = useState(null);
+    const [detectedResult, setDetectedResult] = useState(null);
+    const [error, setError] = useState(null);
+
+    const webcamRef = useRef(null);
+    const fileInputRef = useRef(null);
+
+    useEffect(() => {
+        fetchHistory();
+    }, []);
 
     const fetchHistory = async () => {
         try {
             const res = await api.get('/mood');
             setHistory(res.data);
         } catch (error) {
-            console.error(error);
+            console.error("Failed to load history", error);
         }
     };
 
-    useEffect(() => {
-        fetchHistory();
-    }, []);
+    // --- Detection Logic ---
 
-    const startCamera = async () => {
-        setShowCamera(true);
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
-            if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-            }
-        } catch (err) {
-            console.error("Error accessing camera:", err);
-            alert("Could not access camera. Please allow permissions.");
-            setShowCamera(false);
+    const handleCapture = React.useCallback(() => {
+        if (webcamRef.current) {
+            const imageSrc = webcamRef.current.getScreenshot();
+            setCapturedImage(imageSrc);
+            runDetection(imageSrc);
+        }
+    }, [webcamRef]);
+
+    const handleFileUpload = (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                setCapturedImage(reader.result);
+                runDetection(reader.result, file);
+            };
+            reader.readAsDataURL(file);
         }
     };
 
-    const stopCamera = () => {
-        if (videoRef.current && videoRef.current.srcObject) {
-            const tracks = videoRef.current.srcObject.getTracks();
-            tracks.forEach(track => track.stop());
-            videoRef.current.srcObject = null;
-        }
-        setShowCamera(false);
-    };
-
-    const captureAndDetect = async () => {
-        if (!videoRef.current || !canvasRef.current) return;
-
-        const context = canvasRef.current.getContext('2d');
-        context.drawImage(videoRef.current, 0, 0, 320, 240);
-
-        canvasRef.current.toBlob(async (blob) => {
-            if (!blob) return;
-
-            setDetecting(true);
-            const formData = new FormData();
-            formData.append('image', blob, 'capture.jpg');
-
-            try {
-                // Call the Python ML Service
-                const response = await fetch('http://localhost:5000/predict', {
-                    method: 'POST',
-                    body: formData
-                });
-
-                if (!response.ok) {
-                    throw new Error('ML Service not available or error');
-                }
-
-                const data = await response.json();
-                console.log("Detected:", data);
-
-                // Map emotion to score (approximate)
-                const moodMap = {
-                    'Happy': 9,
-                    'Neutral': 5,
-                    'Surprise': 7,
-                    'Sad': 3,
-                    'Fear': 2,
-                    'Angry': 1,
-                    'Disgust': 1
-                };
-
-                if (data.mood && moodMap[data.mood]) {
-                    setMoodScore(moodMap[data.mood]);
-                    setNote(`AI Detected: ${data.mood} (Confidence: ${(data.confidence * 100).toFixed(1)}%)`);
-                }
-
-                stopCamera();
-            } catch (error) {
-                console.error("Detection error:", error);
-                alert("Could not detect mood. Is the ML service running?");
-            } finally {
-                setDetecting(false);
-            }
-        }, 'image/jpeg');
-    };
-
-    const handleImageUpload = async (file) => {
-        if (!file) return;
+    const runDetection = async (imageSrc, fileObj = null) => {
         setDetecting(true);
+        setError(null);
+        setDetectedResult(null);
+
         const formData = new FormData();
-        formData.append('image', file);
+        if (fileObj) {
+            formData.append('image', fileObj);
+        } else {
+            const fetchRes = await fetch(imageSrc);
+            const blob = await fetchRes.blob();
+            formData.append('image', blob, 'capture.jpg');
+        }
 
         try {
-            const response = await fetch('http://localhost:5000/predict', {
-                method: 'POST',
-                body: formData
+            // Call Python Service
+            const res = await axios.post('http://localhost:5000/predict', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
             });
 
-            if (!response.ok) throw new Error('ML Service error');
+            setDetectedResult(res.data);
 
-            const data = await response.json();
-            console.log("Detected:", data);
-
+            // Auto-fill form
             const moodMap = {
-                'Happy': 9, 'Neutral': 5, 'Surprise': 7, 'Sad': 3,
-                'Fear': 2, 'Angry': 1, 'Disgust': 1
+                'Happy': 9, 'Neutral': 5, 'Surprise': 7,
+                'Sad': 3, 'Fear': 2, 'Angry': 2, 'Disgust': 1
             };
+            const detectedMood = res.data.mood;
+            const score = moodMap[detectedMood] || 5;
 
-            if (data.mood && moodMap[data.mood]) {
-                setMoodScore(moodMap[data.mood]);
-                setNote(`AI Detected (from image): ${data.mood} (Confidence: ${(data.confidence * 100).toFixed(1)}%)`);
-            }
-        } catch (error) {
-            console.error("Detection error:", error);
-            alert("Could not detect mood from image.");
+            setMoodScore(score);
+            setNote(`AI Detected: ${detectedMood} (Confidence: ${(res.data.confidence * 100).toFixed(1)}%)`);
+
+        } catch (err) {
+            console.error(err);
+            setError("Failed to verify mood with AI service. Is it running?");
         } finally {
             setDetecting(false);
         }
     };
 
-    useEffect(() => {
-        const handlePaste = (e) => {
-            const items = e.clipboardData.items;
-            for (let i = 0; i < items.length; i++) {
-                if (items[i].type.indexOf('image') !== -1) {
-                    const blob = items[i].getAsFile();
-                    handleImageUpload(blob);
-                    break;
-                }
-            }
-        };
-        window.addEventListener('paste', handlePaste);
-        return () => window.removeEventListener('paste', handlePaste);
-    }, []);
+    const resetDetection = () => {
+        setCapturedImage(null);
+        setDetectedResult(null);
+        setError(null);
+        setAiMode(null);
+    };
+
+    // --- Saving Logic ---
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -168,149 +122,238 @@ const MoodTracker = () => {
                 moodLabel: label,
                 note
             });
+
             setNote('');
+            setCapturedImage(null);
+            setDetectedResult(null);
             fetchHistory();
+            alert("Mood logged successfully!");
         } catch (error) {
             console.error(error);
+            alert("Failed to save mood.");
         } finally {
             setLoading(false);
         }
     };
 
     const chartData = history.slice().reverse().map(entry => ({
-        date: new Date(entry.timestamp).toLocaleDateString(),
+        date: new Date(entry.timestamp).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
         score: entry.moodScore
     }));
 
     return (
         <Layout>
-            <h1 className="text-3xl font-bold text-gray-800 mb-8">Mood Tracker</h1>
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-xl font-bold mb-6">How are you feeling today?</h2>
-
-                    {/* AI Detection Section */}
-                    <div className="mb-6 p-4 bg-indigo-50 rounded-lg border border-indigo-100">
-                        <h3 className="font-semibold text-indigo-900 mb-2">AI Mood Detection</h3>
-                        <p className="text-sm text-indigo-700 mb-4">Let AI analyze your facial expression to detect your mood. Use your camera or upload a photo.</p>
-
-                        {!showCamera ? (
-                            <div className="flex gap-2">
-                                <button
-                                    type="button"
-                                    onClick={startCamera}
-                                    className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium"
-                                >
-                                    Open Camera
-                                </button>
-                                <label className="px-4 py-2 bg-white text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 text-sm font-medium cursor-pointer flex items-center">
-                                    Upload Photo
-                                    <input
-                                        type="file"
-                                        accept="image/*"
-                                        className="hidden"
-                                        onChange={(e) => {
-                                            if (e.target.files?.[0]) {
-                                                handleImageUpload(e.target.files[0]);
-                                            }
-                                        }}
-                                    />
-                                </label>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                <div className="relative w-full max-w-[320px] mx-auto bg-black rounded-lg overflow-hidden">
-                                    <video
-                                        ref={videoRef}
-                                        autoPlay
-                                        playsInline
-                                        className="w-full h-auto"
-                                    />
-                                    <canvas ref={canvasRef} width="320" height="240" className="hidden" />
-                                </div>
-                                <div className="flex gap-2 justify-center">
-                                    <button
-                                        type="button"
-                                        onClick={captureAndDetect}
-                                        disabled={detecting}
-                                        className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 text-sm font-medium disabled:opacity-50"
-                                    >
-                                        {detecting ? 'Analyzing...' : 'Capture & Detect'}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={stopCamera}
-                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 text-sm font-medium"
-                                    >
-                                        Cancel
-                                    </button>
-                                </div>
-                            </div>
-                        )}
+            <div className="max-w-6xl mx-auto space-y-8">
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-6">
+                    <div>
+                        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Mood Tracker</h1>
+                        <p className="text-gray-500 mt-2 text-lg">Track your emotional wellness journey using AI.</p>
                     </div>
-
-                    <form onSubmit={handleSubmit} className="space-y-6">
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Mood Score: {moodScore}</label>
-                            <input
-                                type="range"
-                                min="1"
-                                max="10"
-                                value={moodScore}
-                                onChange={(e) => setMoodScore(parseInt(e.target.value))}
-                                className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-primary"
-                            />
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                                <span>Sad (1)</span>
-                                <span>Happy (10)</span>
-                            </div>
-                        </div>
-
-                        <div>
-                            <label className="block text-sm font-medium text-gray-700 mb-2">Note (Optional)</label>
-                            <textarea
-                                value={note}
-                                onChange={(e) => setNote(e.target.value)}
-                                className="w-full px-4 py-2 border rounded-lg h-32 resize-none focus:ring-2 focus:ring-primary focus:border-transparent outline-none"
-                                placeholder="What's on your mind?"
-                            />
-                        </div>
-
-                        <button
-                            type="submit"
-                            disabled={loading}
-                            className="w-full bg-primary text-white py-2 rounded-lg hover:bg-indigo-700 transition-colors font-medium disabled:opacity-50"
-                        >
-                            {loading ? 'Saving...' : 'Log Mood'}
-                        </button>
-                    </form>
                 </div>
 
-                <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
-                    <h2 className="text-xl font-bold mb-6">Mood History</h2>
-                    <div className="h-64 mb-6">
-                        <ResponsiveContainer width="100%" height="100%">
-                            <LineChart data={chartData}>
-                                <CartesianGrid strokeDasharray="3 3" />
-                                <XAxis dataKey="date" />
-                                <YAxis domain={[0, 10]} />
-                                <Tooltip />
-                                <Line type="monotone" dataKey="score" stroke="#10B981" strokeWidth={2} />
-                            </LineChart>
-                        </ResponsiveContainer>
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    {/* Left Column: Input */}
+                    <div className="space-y-6">
+                        {/* AI Section */}
+                        <div className="bg-white p-6 rounded-[2rem] shadow-soft border border-gray-100 overflow-hidden relative">
+                            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-indigo-500 to-purple-500"></div>
+
+                            <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+                                <Smile className="text-indigo-500" /> AI Detection
+                            </h2>
+
+                            {!aiMode ? (
+                                <div className="grid grid-cols-2 gap-4">
+                                    <button
+                                        onClick={() => setAiMode('camera')}
+                                        className="py-8 px-4 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-indigo-400 hover:bg-indigo-50 transition-all group"
+                                    >
+                                        <div className="p-3 bg-indigo-100 text-indigo-600 rounded-full group-hover:scale-110 transition-transform">
+                                            <Camera size={24} />
+                                        </div>
+                                        <span className="font-semibold text-gray-700">Live Camera</span>
+                                    </button>
+                                    <button
+                                        onClick={() => fileInputRef.current?.click()}
+                                        className="py-8 px-4 border-2 border-dashed border-gray-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:border-purple-400 hover:bg-purple-50 transition-all group"
+                                    >
+                                        <div className="p-3 bg-purple-100 text-purple-600 rounded-full group-hover:scale-110 transition-transform">
+                                            <Upload size={24} />
+                                        </div>
+                                        <span className="font-semibold text-gray-700">Upload Photo</span>
+                                        <input
+                                            type="file" ref={fileInputRef} className="hidden"
+                                            accept="image/*" onChange={handleFileUpload}
+                                        />
+                                    </button>
+                                </div>
+                            ) : (
+                                <div className="space-y-4 animate-fade-in">
+                                    <div className="flex justify-between items-center bg-gray-50 p-3 rounded-xl">
+                                        <span className="font-semibold text-gray-600 text-sm uppercase tracking-wide">
+                                            {aiMode === 'camera' ? 'Camera Mode' : 'Image Preview'}
+                                        </span>
+                                        <button onClick={resetDetection} className="p-1 hover:bg-gray-200 rounded-full transition-colors">
+                                            <RefreshCw size={16} className="text-gray-500" />
+                                        </button>
+                                    </div>
+
+                                    <div className="relative rounded-2xl overflow-hidden bg-black aspect-video flex items-center justify-center group">
+                                        {capturedImage ? (
+                                            <img src={capturedImage} className="w-full h-full object-contain" alt="Captured" />
+                                        ) : (
+                                            <Webcam
+                                                audio={false}
+                                                ref={webcamRef}
+                                                screenshotFormat="image/jpeg"
+                                                className="w-full h-full object-cover"
+                                                videoConstraints={{ facingMode: "user" }}
+                                            />
+                                        )}
+
+                                        {/* Overlay Loader */}
+                                        {detecting && (
+                                            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center text-white gap-2">
+                                                <div className="w-8 h-8 border-4 border-white/30 border-t-white rounded-full animate-spin"></div>
+                                                <span className="text-sm font-medium">Analyzing Expressions...</span>
+                                            </div>
+                                        )}
+
+                                        {/* Camera Capture Button */}
+                                        {!capturedImage && aiMode === 'camera' && (
+                                            <button
+                                                onClick={handleCapture}
+                                                className="absolute bottom-4 left-1/2 -translate-x-1/2 bg-white text-indigo-600 px-6 py-2 rounded-full font-bold shadow-lg hover:scale-105 transition-transform"
+                                            >
+                                                Capture
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {detectedResult && (
+                                        <div className="p-4 bg-green-50 rounded-xl border border-green-200 flex items-center gap-4 animate-bounce-in">
+                                            <div className="p-3 bg-green-100 text-green-600 rounded-full">
+                                                <CheckCircle size={24} />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-bold text-green-900 text-lg">{detectedResult.mood}</h4>
+                                                <p className="text-green-700 text-sm">Confidence: {(detectedResult.confidence * 100).toFixed(0)}%</p>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {error && (
+                                        <div className="p-4 bg-red-50 rounded-xl border border-red-200 flex items-center gap-3 text-red-700 text-sm">
+                                            <AlertCircle size={20} /> {error}
+                                        </div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Manual Form */}
+                        <div className="bg-white p-6 rounded-[2rem] shadow-soft border border-gray-100">
+                            <h2 className="text-xl font-bold mb-4">Log Details</h2>
+                            <form onSubmit={handleSubmit} className="space-y-6">
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2 flex justify-between">
+                                        <span>Mood Level</span>
+                                        <span className="text-primary">{moodScore} / 10</span>
+                                    </label>
+                                    <input
+                                        type="range" min="1" max="10"
+                                        value={moodScore}
+                                        onChange={(e) => setMoodScore(parseInt(e.target.value))}
+                                        className="w-full h-3 bg-gray-100 rounded-lg appearance-none cursor-pointer accent-indigo-600"
+                                    />
+                                    <div className="flex justify-between text-xs text-gray-400 font-medium mt-2 px-1">
+                                        <span>Stressed</span>
+                                        <span>Balanced</span>
+                                        <span>Excellent</span>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-sm font-bold text-gray-700 mb-2">Note</label>
+                                    <textarea
+                                        value={note}
+                                        onChange={(e) => setNote(e.target.value)}
+                                        className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all h-32 resize-none"
+                                        placeholder="How are you feeling right now?"
+                                    />
+                                </div>
+
+                                <button
+                                    type="submit"
+                                    disabled={loading}
+                                    className="w-full py-4 bg-gray-900 text-white rounded-xl font-bold hover:bg-gray-800 transition-all shadow-lg shadow-gray-900/10 flex items-center justify-center gap-2 disabled:opacity-70"
+                                >
+                                    {loading ? 'Saving...' : <><Save size={20} /> Save Entry</>}
+                                </button>
+                            </form>
+                        </div>
                     </div>
 
-                    <div className="space-y-4 max-h-64 overflow-y-auto">
-                        {history.map(entry => (
-                            <div key={entry.id} className="p-4 bg-gray-50 rounded-lg">
-                                <div className="flex justify-between items-center mb-2">
-                                    <span className="font-bold text-gray-800">{entry.moodLabel} ({entry.moodScore}/10)</span>
-                                    <span className="text-xs text-gray-500">{new Date(entry.timestamp).toLocaleString()}</span>
+                    {/* Right Column: History */}
+                    <div className="space-y-6">
+                        <div className="bg-white p-6 rounded-[2rem] shadow-soft border border-gray-100 h-full flex flex-col">
+                            <div className="flex justify-between items-center mb-6">
+                                <h2 className="text-xl font-bold">Mood Trends</h2>
+                                <div className="flex items-center gap-2 text-sm text-gray-500">
+                                    <span className="w-2 h-2 bg-indigo-500 rounded-full"></span> This Week
                                 </div>
-                                {entry.note && <p className="text-gray-600 text-sm">{entry.note}</p>}
                             </div>
-                        ))}
+
+                            <div className="h-64 w-full mb-8">
+                                <ResponsiveContainer width="100%" height="100%">
+                                    <LineChart data={chartData}>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                        <XAxis dataKey="date" axisLine={false} tickLine={false} tick={{ fill: '#9CA3AF', fontSize: 12 }} dy={10} />
+                                        <YAxis hide domain={[0, 10]} />
+                                        <Tooltip
+                                            contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)' }}
+                                            cursor={{ stroke: '#6366F1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                                        />
+                                        <Line
+                                            type="monotone"
+                                            dataKey="score"
+                                            stroke="#6366F1"
+                                            strokeWidth={4}
+                                            dot={{ r: 4, fill: '#6366F1', strokeWidth: 2, stroke: '#fff' }}
+                                            activeDot={{ r: 6, fill: '#4F46E5' }}
+                                        />
+                                    </LineChart>
+                                </ResponsiveContainer>
+                            </div>
+
+                            <div className="flex-1 overflow-y-auto pr-2 space-y-4 max-h-[500px] custom-scrollbar">
+                                {history.map(entry => (
+                                    <div key={entry.id} className="p-4 bg-gray-50 hover:bg-white border border-transparent hover:border-gray-100 rounded-2xl transition-all group hover:shadow-sm">
+                                        <div className="flex justify-between items-start mb-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white ${entry.moodScore >= 7 ? 'bg-green-400' : entry.moodScore >= 4 ? 'bg-yellow-400' : 'bg-red-400'}`}>
+                                                    {entry.moodScore}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-gray-800">{entry.moodLabel}</p>
+                                                    <p className="text-xs text-gray-400">{new Date(entry.timestamp).toLocaleString(undefined, { weekday: 'short', hour: 'numeric', minute: '2-digit' })}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {entry.note && (
+                                            <p className="text-gray-600 text-sm bg-white p-3 rounded-xl border border-gray-100 italic">
+                                                "{entry.note}"
+                                            </p>
+                                        )}
+                                    </div>
+                                ))}
+                                {history.length === 0 && (
+                                    <div className="text-center text-gray-400 py-10">
+                                        <p>No mood logs yet. Start tracking today!</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>

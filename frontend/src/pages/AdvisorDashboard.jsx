@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Layout from '../components/Layout';
 import api from '../services/api';
 import { AlertTriangle, CheckCircle, MinusCircle, Send, X, MoreHorizontal, Search, Bell } from 'lucide-react';
@@ -6,6 +7,7 @@ import { useAuthStore } from '../store/authStore';
 
 const AdvisorDashboard = () => {
     const { user } = useAuthStore();
+    const navigate = useNavigate();
     const [reports, setReports] = useState([]);
     const [selectedStudent, setSelectedStudent] = useState(null);
     const [alertMessage, setAlertMessage] = useState('');
@@ -46,7 +48,8 @@ const AdvisorDashboard = () => {
             setAlertMessage('');
         } catch (error) {
             console.error("Failed to send alert", error);
-            alert('Failed to send alert. Please try again.');
+            const msg = error.response?.data?.message || error.message || "Unknown error";
+            alert(`Failed to send alert: ${msg}`);
         } finally {
             setIsSending(false);
         }
@@ -131,11 +134,11 @@ const AdvisorDashboard = () => {
                                 {reports.map((report) => (
                                     <tr key={report.studentId} className="hover:bg-gray-50/80 transition-colors group">
                                         <td className="px-8 py-5 whitespace-nowrap">
-                                            <div className="flex items-center gap-3">
+                                            <div className="flex items-center gap-3 cursor-pointer group-hover:translate-x-1 transition-transform" onClick={() => navigate(`/advisor/student/${report.studentId}`)}>
                                                 <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
                                                     {report.studentName.charAt(0)}
                                                 </div>
-                                                <div className="font-semibold text-gray-900">{report.studentName}</div>
+                                                <div className="font-semibold text-gray-900 group-hover:text-primary transition-colors">{report.studentName}</div>
                                             </div>
                                         </td>
                                         <td className="px-6 py-5 whitespace-nowrap">

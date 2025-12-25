@@ -2,12 +2,14 @@ package com.mindmate.backend.service;
 
 import com.mindmate.backend.domain.Student;
 import com.mindmate.backend.domain.Task;
+import com.mindmate.backend.domain.TaskStatus;
 import com.mindmate.backend.dto.TaskRequestDTO;
 import com.mindmate.backend.repository.StudentRepository;
 import com.mindmate.backend.repository.TaskRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -31,6 +33,10 @@ public class TaskService {
                 .priority(dto.getPriority())
                 .build();
 
+        if (dto.getStatus() == TaskStatus.DONE) {
+            task.setCompletedAt(LocalDateTime.now());
+        }
+
         Task saved = taskRepository.save(task);
         return mapToDTO(saved);
     }
@@ -49,6 +55,14 @@ public class TaskService {
         task.setTitle(dto.getTitle());
         task.setDescription(dto.getDescription());
         task.setDueDate(dto.getDueDate());
+        
+        // Handle completion timestamp
+        if (dto.getStatus() == TaskStatus.DONE && task.getStatus() != TaskStatus.DONE) {
+            task.setCompletedAt(LocalDateTime.now());
+        } else if (dto.getStatus() != TaskStatus.DONE) {
+            task.setCompletedAt(null);
+        }
+
         task.setStatus(dto.getStatus());
         task.setPriority(dto.getPriority());
         

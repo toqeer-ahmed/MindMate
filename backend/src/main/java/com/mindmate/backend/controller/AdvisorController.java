@@ -12,6 +12,7 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/advisor")
+@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 @RequiredArgsConstructor
 public class AdvisorController {
 
@@ -27,5 +28,10 @@ public class AdvisorController {
         String message = payload.get("message");
         advisorService.sendAlert(studentId, message);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/student/{studentId}")
+    public ResponseEntity<com.mindmate.backend.dto.StudentDetailDTO> getStudentDetail(@PathVariable Long studentId) {
+        return ResponseEntity.ok(advisorService.getStudentDetail(studentId));
     }
 }

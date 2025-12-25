@@ -10,6 +10,7 @@ import MoodTracker from './pages/MoodTracker';
 import Journal from './pages/Journal';
 import Tasks from './pages/Tasks';
 import AdvisorDashboard from './pages/AdvisorDashboard';
+import AdvisorStudentView from './pages/AdvisorStudentView';
 import PrivateRoute from './components/PrivateRoute';
 
 function App() {
@@ -64,10 +65,32 @@ function App() {
           </PrivateRoute>
         } />
 
+        <Route path="/advisor/student/:id" element={
+          <PrivateRoute>
+            <AdvisorStudentView />
+          </PrivateRoute>
+        } />
+
+        <Route path="/academic" element={
+          <PrivateRoute>
+            {/* Academic Tracker was missing from App.jsx view in previous turn, adding it explicitly if needed or it was just not shown? 
+                 Ah, looking at file view step 449, /academic route was NOT present in App.jsx. 
+                 It WAS in Navbar links. This explains why it might not load. Adding it now. 
+             */}
+            <React.Suspense fallback={<div>Loading...</div>}>
+              <AcademicWrapper />
+            </React.Suspense>
+          </PrivateRoute>
+        } />
+
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>
   );
 }
+
+// Lazy load to avoid circular deps if any, or just direct import
+import AcademicTracker from './pages/AcademicTracker';
+const AcademicWrapper = () => <AcademicTracker />;
 
 export default App;
