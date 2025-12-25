@@ -15,10 +15,19 @@ import java.util.stream.Collectors;
 public class AdvisorService {
 
     private final StudentRepository studentRepository;
+    private final NotificationService notificationService;
 
     public List<WellnessReportDTO> getWellnessReports() {
         List<Student> students = studentRepository.findAll();
         return students.stream().map(this::generateReport).collect(Collectors.toList());
+    }
+
+    public void sendAlert(Long studentId, String message) {
+        Student student = studentRepository.findById(studentId)
+                .orElseThrow(() -> new RuntimeException("Student not found"));
+        
+        // Send email alert to student
+        notificationService.sendNotification("EMAIL", student.getEmail(), "Advisor Alert: " + message);
     }
 
     private WellnessReportDTO generateReport(Student student) {
@@ -29,7 +38,7 @@ public class AdvisorService {
 
         int journalCount = student.getJournalEntries().size();
         int tasksCompleted = (int) student.getTasks().stream()
-                .filter(t -> t.getStatus().name().equals("DONE"))
+                .filter(t -> t.getStatus().name().equals("DONE")) // Assuming Enum name
                 .count();
 
         String riskLevel = "LOW";

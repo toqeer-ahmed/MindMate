@@ -3,7 +3,7 @@ import Layout from '../components/Layout';
 import { useAuthStore } from '../store/authStore';
 import api from '../services/api';
 import { AreaChart, Area, XAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { Smile, Frown, Meh, Plus, MoreHorizontal, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Camera, Upload, Loader, X } from 'lucide-react';
+import { Smile, Frown, Meh, Plus, MoreHorizontal, Calendar as CalendarIcon, ChevronLeft, ChevronRight, Camera, Upload, Loader, X, CheckCircle, Circle } from 'lucide-react';
 import Webcam from 'react-webcam';
 import axios from 'axios';
 
@@ -11,6 +11,8 @@ const Dashboard = () => {
     const { user } = useAuthStore();
     const [moodHistory, setMoodHistory] = useState([]);
     const [tasks, setTasks] = useState([]);
+    const [newTaskTitle, setNewTaskTitle] = useState('');
+    const [isAddingTask, setIsAddingTask] = useState(false);
 
     // Mood Detection State
     const [moodMode, setMoodMode] = useState(null); // 'camera' or 'upload' or null
@@ -27,14 +29,104 @@ const Dashboard = () => {
     const daysInMonth = Array.from({ length: 30 }, (_, i) => i + 1);
 
     const moodIcons = [
-        { icon: Frown, color: 'text-red-400', bg: 'bg-red-100', label: 'Angry' },
-        { icon: Meh, color: 'text-yellow-400', bg: 'bg-yellow-100', label: 'Disgust' },
-        { icon: Frown, color: 'text-purple-400', bg: 'bg-purple-100', label: 'Fear' },
-        { icon: Smile, color: 'text-green-400', bg: 'bg-green-100', label: 'Happy' },
-        { icon: Meh, color: 'text-gray-400', bg: 'bg-gray-100', label: 'Neutral' },
-        { icon: Frown, color: 'text-blue-400', bg: 'bg-blue-100', label: 'Sad' },
-        { icon: Smile, color: 'text-orange-400', bg: 'bg-orange-100', label: 'Surprise' },
+        { icon: Frown, color: 'text-red-400', bg: 'bg-red-100', label: 'Angry', score: 2 },
+        { icon: Meh, color: 'text-yellow-400', bg: 'bg-yellow-100', label: 'Disgust', score: 1 },
+        { icon: Frown, color: 'text-purple-400', bg: 'bg-purple-100', label: 'Fear', score: 2 },
+        { icon: Smile, color: 'text-green-400', bg: 'bg-green-100', label: 'Happy', score: 9 },
+        { icon: Meh, color: 'text-gray-400', bg: 'bg-gray-100', label: 'Neutral', score: 5 },
+        { icon: Frown, color: 'text-blue-400', bg: 'bg-blue-100', label: 'Sad', score: 3 },
+        { icon: Smile, color: 'text-orange-400', bg: 'bg-orange-100', label: 'Surprise', score: 7 },
     ];
+
+    useEffect(() => {
+        fetchDashboardData();
+    }, []);
+
+    const fetchDashboardData = async () => {
+        try {
+            await Promise.all([fetchTasks(), fetchMoodHistory()]);
+        } catch (error) {
+            console.error("Error loading dashboard data:", error);
+        }
+    };
+
+    const fetchTasks = async () => {
+        try {
+            const res = await api.get('/tasks');
+            // Ensure we handle the response correctly based on DTO
+            setTasks(res.data);
+        } catch (err) {
+            console.error("Failed to fetch tasks", err);
+        }
+    };
+
+    const fetchMoodHistory = async () => {
+        try {
+            const res = await api.get('/mood');
+            // Transform backend DTO to chart format
+            // Assuming DTO has timestamp and moodScore
+            const transformedData = res.data.map(entry => ({
+                day: new Date(entry.timestamp).toLocaleDateString('en-US', { weekday: 'short' }),
+                score: entry.moodScore * 10 // Scale 1-10 to 10-100 for chart if needed
+            })).slice(-7); // Last 7 entries
+
+            // If empty, keep local fallback or empty
+            if (transformedData.length > 0) {
+                setMoodHistory(transformedData);
+            }
+        } catch (err) {
+            console.error("Failed to fetch mood history", err);
+        }
+    };
+
+    const handleCreateTask = async (e) => {
+        if (e.key === 'Enter' && newTaskTitle.trim()) {
+            try {
+                await api.post('/tasks', {
+                    title: newTaskTitle,
+                    status: 'TODO',
+                    priority: 'MEDIUM', // Default
+                    dueDate: new Date().toISOString().split('T')[0] // Today
+                });
+                setNewTaskTitle('');
+                setIsAddingTask(false);
+                fetchTasks();
+            } catch (err) {
+                console.error("Failed to create task", err);
+            }
+        }
+    };
+
+    const toggleTaskStatus = async (task) => {
+        try {
+            const newStatus = task.status === 'DONE' ? 'TODO' : 'DONE';
+            await api.put(`/tasks/${task.id}`, {
+                ...task,
+                status: newStatus
+            });
+            fetchTasks();
+        } catch (err) {
+            console.error("Failed to update task", err);
+            alert("Could not update task. Check console.");
+        }
+    };
+
+    const handleManualMood = async (moodItem) => {
+        try {
+            await api.post('/mood', {
+                moodLabel: moodItem.label,
+                moodScore: moodItem.score,
+                note: 'Manual entry from Dashboard'
+            });
+            fetchMoodHistory();
+            alert(`Log saved: Feeling ${moodItem.label}`);
+        } catch (err) {
+            console.error("Failed to save mood", err);
+            alert("Could not save mood.");
+        }
+    };
+
+    // --- Mood Detection Logic ---
 
     const capture = React.useCallback(() => {
         const imageSrc = webcamRef.current.getScreenshot();
@@ -71,18 +163,37 @@ const Dashboard = () => {
                 formData.append('image', blob, 'capture.jpg');
             }
 
-            // Using direct fetch to ML service usually on port 5000
-            // Ensure your Flask app has CORS enabled for localhost:5173
+            // Call Python ML Service
             const response = await axios.post('http://localhost:5000/predict', formData, {
                 headers: {
                     'Content-Type': 'multipart/form-data',
                 },
             });
 
-            setPrediction(response.data);
+            const result = response.data;
+            setPrediction(result);
+
+            // AUTO-SAVE to Backend
+            // Map the detected mood to a score (simple mapping)
+            const moodScoreMap = {
+                'Happy': 9, 'Sad': 3, 'Angry': 2, 'Neutral': 5,
+                'Fear': 2, 'Disgust': 1, 'Surprise': 7
+            };
+            const score = moodScoreMap[result.mood] || 5;
+
+            // We use the 'api' instance here to talk to Spring Boot
+            await api.post('/mood', {
+                moodLabel: result.mood,
+                moodScore: score,
+                note: `AI Detected (Confidence: ${(result.confidence * 100).toFixed(1)}%)`
+            });
+
+            // Refresh chart
+            fetchMoodHistory();
+
         } catch (err) {
             console.error(err);
-            setError('Failed to detect mood. Please try again.');
+            setError('Failed to detect mood. Ensure ML service is running on port 5000.');
         } finally {
             setLoading(false);
         }
@@ -114,10 +225,6 @@ const Dashboard = () => {
                     <h1 className="text-4xl font-bold text-text-main mb-2">Dashboard</h1>
                     <p className="text-text-muted">Welcome back, {user?.firstName || 'Student'}</p>
                 </div>
-                {/* <button className="hidden md:flex items-center gap-2 px-4 py-2 bg-primary text-white rounded-lg shadow-md hover:bg-primary-dark transition-colors">
-                    <Plus size={18} />
-                    <span>New Entry</span>
-                </button> */}
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -128,11 +235,13 @@ const Dashboard = () => {
                     <div className="bg-white p-6 rounded-[1.5rem] shadow-soft hover:shadow-lg transition-shadow">
                         <div className="flex justify-between items-center mb-6">
                             <h3 className="text-lg font-bold text-text-main">Wellness Score</h3>
-                            <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-full">+2.4%</span>
+                            {moodHistory.length > 0 && (
+                                <span className="text-xs font-medium text-green-500 bg-green-50 px-2 py-1 rounded-full">Live</span>
+                            )}
                         </div>
                         <div className="h-48 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <AreaChart data={moodHistory.length > 0 ? moodHistory : [{ day: 'Mon', score: 0 }, { day: 'Sun', score: 0 }]}>
+                                <AreaChart data={moodHistory.length > 0 ? moodHistory : [{ day: 'Start', score: 50 }, { day: 'Now', score: 50 }]}>
                                     <defs>
                                         <linearGradient id="colorScore" x1="0" y1="0" x2="0" y2="1">
                                             <stop offset="5%" stopColor="#818cf8" stopOpacity={0.3} />
@@ -229,6 +338,7 @@ const Dashboard = () => {
                                         <div className="text-4xl mb-2">{getEmojiForMood(prediction.mood)}</div>
                                         <h4 className="text-xl font-bold text-green-800 capitalize">{prediction.mood}</h4>
                                         <p className="text-green-600 text-sm font-medium">Confidence: {(prediction.confidence * 100).toFixed(1)}%</p>
+                                        <p className="text-xs text-green-600 mt-1">Logged to your wellness score!</p>
                                         <button
                                             onClick={resetMoodDetection}
                                             className="mt-3 text-xs text-green-700 underline"
@@ -261,34 +371,52 @@ const Dashboard = () => {
                         <MoreHorizontal className="text-text-muted cursor-pointer" size={20} />
                     </div>
 
-                    <div className="flex-1 space-y-3">
+                    <div className="flex-1 space-y-3 overflow-y-auto max-h-[400px]">
                         {tasks.length > 0 ? tasks.map(task => (
-                            <div key={task.id} className="group flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer">
-                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${task.completed ? 'bg-primary border-primary' : 'border-gray-300'}`}>
-                                    {task.completed && <div className="w-2 h-2 bg-white rounded-full" />}
+                            <div key={task.id} className="group flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer" onClick={() => toggleTaskStatus(task)}>
+                                <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${task.status === 'DONE' ? 'bg-primary border-primary' : 'border-gray-300'}`}>
+                                    {task.status === 'DONE' && <div className="w-2 h-2 bg-white rounded-full" />}
                                 </div>
                                 <div className="flex-1">
-                                    <p className={`font-medium text-sm ${task.completed ? 'text-gray-400 line-through' : 'text-text-main'}`}>{task.title}</p>
-                                    <p className="text-xs text-text-muted">{task.time}</p>
+                                    <p className={`font-medium text-sm ${task.status === 'DONE' ? 'text-gray-400 line-through' : 'text-text-main'}`}>{task.title}</p>
+                                    <p className="text-xs text-text-muted">{task.dueDate}</p>
                                 </div>
                             </div>
                         )) : (
-                            <div className="text-center py-10 text-text-muted">
-                                <p>No tasks yet.</p>
-                                <p className="text-sm">Add one to get productive!</p>
-                            </div>
+                            !isAddingTask && (
+                                <div className="text-center py-10 text-text-muted">
+                                    <p>No tasks yet.</p>
+                                    <p className="text-sm">Add one to get productive!</p>
+                                </div>
+                            )
                         )}
 
-                        <div className="group flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer opacity-50">
-                            <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
-                            <div className="flex-1">
-                                <p className="font-medium text-sm text-text-muted">Add new task...</p>
+                        {isAddingTask ? (
+                            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                                <div className="w-5 h-5 rounded-full border-2 border-gray-300"></div>
+                                <input
+                                    autoFocus
+                                    type="text"
+                                    className="flex-1 bg-transparent border-none focus:outline-none text-sm"
+                                    placeholder="Type task and press Enter..."
+                                    value={newTaskTitle}
+                                    onChange={(e) => setNewTaskTitle(e.target.value)}
+                                    onKeyDown={handleCreateTask}
+                                    onBlur={() => !newTaskTitle && setIsAddingTask(false)}
+                                />
                             </div>
-                        </div>
+                        ) : (
+                            <div
+                                onClick={() => setIsAddingTask(true)}
+                                className="group flex items-center gap-3 p-3 hover:bg-gray-50 rounded-xl transition-colors cursor-pointer opacity-70 hover:opacity-100"
+                            >
+                                <Plus size={20} className="text-primary" />
+                                <div className="flex-1">
+                                    <p className="font-medium text-sm text-primary">Add new task...</p>
+                                </div>
+                            </div>
+                        )}
                     </div>
-                    <button className="w-full mt-4 py-2.5 bg-secondary/10 text-secondary font-semibold rounded-xl hover:bg-secondary/20 transition-colors">
-                        View All Tasks
-                    </button>
                 </div>
 
                 {/* Column 3: Calendar & Mood Visuals */}
@@ -324,7 +452,12 @@ const Dashboard = () => {
                         <h3 className="text-lg font-bold text-text-main mb-4">How are you feeling?</h3>
                         <div className="flex justify-between flex-wrap gap-2">
                             {moodIcons.map((m, idx) => (
-                                <button key={idx} className={`p-2 rounded-full ${m.bg} hover:scale-110 transition-transform`} title={m.label}>
+                                <button
+                                    key={idx}
+                                    onClick={() => handleManualMood(m)}
+                                    className={`p-2 rounded-full ${m.bg} hover:scale-110 transition-transform focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary`}
+                                    title={m.label}
+                                >
                                     <m.icon size={20} className={m.color} />
                                 </button>
                             ))}

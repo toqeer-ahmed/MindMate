@@ -5,11 +5,10 @@ import com.mindmate.backend.service.AdvisorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/advisor")
@@ -19,8 +18,14 @@ public class AdvisorController {
     private final AdvisorService advisorService;
 
     @GetMapping("/reports")
-    // @PreAuthorize("hasRole('ADVISOR')") // In a real app, ensure only advisors can access
     public ResponseEntity<List<WellnessReportDTO>> getReports() {
         return ResponseEntity.ok(advisorService.getWellnessReports());
+    }
+
+    @PostMapping("/send-alert/{studentId}")
+    public ResponseEntity<Void> sendAlert(@PathVariable Long studentId, @RequestBody Map<String, String> payload) {
+        String message = payload.get("message");
+        advisorService.sendAlert(studentId, message);
+        return ResponseEntity.ok().build();
     }
 }

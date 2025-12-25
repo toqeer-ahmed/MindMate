@@ -1,0 +1,1091 @@
+ASSIGNMENT 02
+CONCEPTUAL & TECHNICAL DESIGN
+MindMate
+Your Campus Wellness & Productivity Companion
+Submitted by: Group
+Toqeer Ahmed (2023-728)
+Mian Muhammad Owais (2023-316)
+Mustajaab Ul Fida Qadri (2023-567)
+Course:Software Design and Architecture
+Instructor:Engr. Said Nabi
+Faculty:Faculty of Computer and Software Engineering
+Submission Date:November 18, 2025
+MindMate: Assignment 02Group #12
+Contents
+1 TASK 1: CLASS IDENTIFICATION 3
+1.1 LAYER 1 — DOMAIN LAYER (Core Business Objects) . . . . . . . . . 3
+1.1.1 1. User . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.1.2 2. Student . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 3
+1.1.3 3. Advisor . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 4
+1.1.4 4. MoodEntry . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+1.1.5 5. JournalEntry . . . . . . . . . . . . . . . . . . . . . . . . . . . . 5
+1.1.6 6. Task . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.1.7 7. EmergencyContact . . . . . . . . . . . . . . . . . . . . . . . . . 6
+1.2 LAYER 2 — SERVICE LAYER (Business Logic) . . . . . . . . . . . . . 7
+1.2.1 8. UserService . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.2.2 9. MoodService . . . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.2.3 10. JournalService . . . . . . . . . . . . . . . . . . . . . . . . . . 7
+1.2.4 11. TaskService . . . . . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.2.5 12. BurnoutDetectionEngine . . . . . . . . . . . . . . . . . . . . . 8
+1.2.6 13. NotificationService . . . . . . . . . . . . . . . . . . . . . . . . 8
+1.3 LAYER 3 — REPOSITORY LAYER . . . . . . . . . . . . . . . . . . . . 9
+1.3.1 14. UserRepository . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+1.3.2 15. MoodRepository . . . . . . . . . . . . . . . . . . . . . . . . . 9
+1.3.3 16. JournalRepository . . . . . . . . . . . . . . . . . . . . . . . . 9
+1.3.4 17. TaskRepository . . . . . . . . . . . . . . . . . . . . . . . . . . 9
+1.3.5 18. EmergencyContactRepository . . . . . . . . . . . . . . . . . . 9
+1.4 LAYER 4 — CONTROLLER LAYER (API Endpoints) . . . . . . . . . . 10
+1.4.1 19. AuthController . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.4.2 20. MoodController . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.4.3 21. JournalController . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.4.4 22. TaskController . . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.4.5 23. AdvisorController . . . . . . . . . . . . . . . . . . . . . . . . . 10
+1.5 LAYER 5 — SECURITY LAYER . . . . . . . . . . . . . . . . . . . . . . 11
+1.5.1 24. JwtService . . . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+1.5.2 25. EncryptionService . . . . . . . . . . . . . . . . . . . . . . . . 11
+1.5.3 26. SecurityConfig . . . . . . . . . . . . . . . . . . . . . . . . . . 11
+1.6 LAYER 6 — DTO LAYER . . . . . . . . . . . . . . . . . . . . . . . . . 12
+1.6.1 27. LoginRequestDTO . . . . . . . . . . . . . . . . . . . . . . . . 12
+1.6.2 28. SignupRequestDTO . . . . . . . . . . . . . . . . . . . . . . . 12
+1.6.3 29. MoodEntryDTO . . . . . . . . . . . . . . . . . . . . . . . . . 12
+1.6.4 30. JournalEntryDTO . . . . . . . . . . . . . . . . . . . . . . . . 12
+1.6.5 31. TaskRequestDTO . . . . . . . . . . . . . . . . . . . . . . . . . 12
+1.6.6 32. WellnessReportDTO . . . . . . . . . . . . . . . . . . . . . . . 12
+2 TASK 2: CRC CARDS (CONCEPTUAL DESIGN) 13
+2.1 CRC Card 1: User . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 13
+2.2 CRC Card 2: Student . . . . . . . . . . . . . . . . . . . . . . . . . . . . 14
+2.3 CRC Card 3: Advisor . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 15
+2.4 CRC Card 4: MoodTracker . . . . . . . . . . . . . . . . . . . . . . . . . 16
+1
+MindMate: Assignment 02Group #12
+2.5 CRC Card 5: JournalManager . . . . . . . . . . . . . . . . . . . . . . . . 16
+2.6 CRC Card 6: TaskManager . . . . . . . . . . . . . . . . . . . . . . . . . 17
+2.7 CRC Card 7: BurnoutDetectionEngine . . . . . . . . . . . . . . . . . . . 18
+2.8 CRC Card 8: NotificationService . . . . . . . . . . . . . . . . . . . . . . 19
+3 TASK 3: UML CLASS DIAGRAM (TECHNICAL DESIGN) 20
+3.1 UML Class Diagram Visualization . . . . . . . . . . . . . . . . . . . . . . 21
+3.2 Key Relationships in the UML Diagram . . . . . . . . . . . . . . . . . . 21
+3.3 Layer Descriptions . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.3.1 Domain Layer . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.3.2 Service Layer . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.3.3 Repository Layer . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.3.4 Controller Layer . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.3.5 Security Layer . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.3.6 DTO Layer . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 22
+3.4 Design Pattern Integration in UML . . . . . . . . . . . . . . . . . . . . . 22
+4 TASK 4: DESIGN PATTERNS PLANNING 24
+4.1 Pattern 1: Factory Method (Creational) . . . . . . . . . . . . . . . . . . 25
+4.2 Pattern 2: Singleton (Creational) . . . . . . . . . . . . . . . . . . . . . . 26
+4.3 Pattern 3: Strategy (Structural) . . . . . . . . . . . . . . . . . . . . . . . 27
+4.4 Pattern 4: Adapter (Structural) . . . . . . . . . . . . . . . . . . . . . . . 28
+4.5 Pattern 5: Observer (Behavioral) . . . . . . . . . . . . . . . . . . . . . . 29
+4.6 Pattern 6: Template Method (Behavioral) . . . . . . . . . . . . . . . . . 30
+5 TASK 5: DESIGN PRINCIPLES AND SOLID COMPLIANCE 31
+5.1 (a) OOAD Design Principles Application . . . . . . . . . . . . . . . . . . 31
+5.1.1 1. Abstraction . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+5.1.2 2. Encapsulation . . . . . . . . . . . . . . . . . . . . . . . . . . . 31
+5.1.3 3. Inheritance . . . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+5.1.4 4. Polymorphism . . . . . . . . . . . . . . . . . . . . . . . . . . . 32
+5.1.5 5. Cohesion & Coupling . . . . . . . . . . . . . . . . . . . . . . . 32
+5.2 (b) SOLID Principles Application . . . . . . . . . . . . . . . . . . . . . . 33
+5.2.1 1. Single Responsibility Principle (SRP) . . . . . . . . . . . . . . 33
+5.2.2 2. Open/Closed Principle (OCP) . . . . . . . . . . . . . . . . . . 34
+5.2.3 3. Liskov Substitution Principle (LSP) . . . . . . . . . . . . . . . 34
+5.2.4 4. Interface Segregation Principle (ISP) . . . . . . . . . . . . . . . 35
+5.2.5 5. Dependency Inversion Principle (DIP) . . . . . . . . . . . . . . 35
+2
+MindMate: Assignment 02Group #12
+1 TASK 1: CLASS IDENTIFICATION
+This section provides a comprehensive identification of all classes in the MindMate system,
+organized by architectural layers following the sample structure.
+1.1 LAYER 1 — DOMAIN LAYER (Core Business Objects)
+1.1.1 1. User
+Purpose:Represents all users in the system (Student, Advisor, Admin).
+Responsibilities:
+•Manage authentication credentials
+•Maintain profile information
+•Handle role-based access control
+•Store user preferences
+Key Attributes:
+•userId, name, email, passwordHash
+•role (STUDENT, ADVISOR, ADMIN)
+•dateJoined, lastLogin
+Key Methods:
+•updateProfile(), getRole(), validateCredentials()
+•login(), logout()
+Relationships:
+•Inheritance:Parent of Student and Advisor classes
+•Association:With AuthenticationService (1-to-1)
+•Dependency:Used by UserService
+1.1.2 2. Student
+Purpose:Represents a student user who tracks wellness and productivity.
+Responsibilities:
+•Record mood entries and track emotional well-being
+•Maintain personal journal entries
+•Manage academic and personal tasks
+•Receive wellness alerts and recommendations
+Key Attributes:
+3
+MindMate: Assignment 02Group #12
+•academicYear, major, studentId
+•emergencyContacts[], wellnessScore
+Key Methods:
+•getMoodHistory(), getJournalEntries(), getTasks()
+•receiveWellnessAlert(), updateWellnessScore()
+Relationships:
+•Inheritance:Extends User class
+•Aggregation:Contains MoodEntry[], JournalEntry[], Task[]
+•Association:With Advisor (many-to-many)
+•Dependency:Used by MoodTracker and TaskManager
+1.1.3 3. Advisor
+Purpose:Represents an advisor who monitors student wellness and provides support.
+Responsibilities:
+•Monitor anonymized student wellness data
+•Generate wellness reports and insights
+•Send alerts to at-risk students
+•Manage assigned student caseload
+Key Attributes:
+•department, specialization, advisorId
+•assignedStudents[], accessLevel
+Key Methods:
+•viewStudentWellness(), generateReport(), sendAlert()
+•assignToStudent(), updateStudentNotes()
+Relationships:
+•Inheritance:Extends User class
+•Association:With Student (many-to-many)
+•Aggregation:Contains WellnessReport[]
+•Dependency:Used by AdvisorDashboard
+4
+MindMate: Assignment 02Group #12
+1.1.4 4. MoodEntry
+Purpose:Represents a single mood recording instance with emotional context.
+Responsibilities:
+•Store mood level and emotional state
+•Record timestamp and contextual notes
+•Trigger analysis when negative mood detected
+•Maintain mood history for pattern analysis
+Key Attributes:
+•entryId, studentId, moodLevel (1-5)
+•emotions[], timestamp, notes, triggerFlags
+Key Methods:
+•analyzeSentiment(), triggerFollowUp()
+•calculateWellnessImpact()
+Relationships:
+•Association:Many-to-one with Student
+•Dependency:Used by MoodAnalyzer and BurnoutDetectionEngine
+•Aggregation:Part of MoodTracker collection
+1.1.5 5. JournalEntry
+Purpose:Represents a personal journal entry for emotional expression and reflection.
+Responsibilities:
+•Store journal content and metadata
+•Maintain privacy and access controls
+•Support emotional processing and reflection
+•Enable search and retrieval
+Key Attributes:
+•entryId, studentId, content, timestamp
+•tags[], moodContext, isPrivate
+Key Methods:
+•saveEntry(), editEntry(), deleteEntry()
+•analyzeEmotionalContent(), generateInsights()
+Relationships:
+•Association:Many-to-one with Student
+•Dependency:Used by JournalManager and SentimentAnalyzer
+•Composition:Contains JournalContent and JournalMetadata
+5
+MindMate: Assignment 02Group #12
+1.1.6 6. Task
+Purpose:Represents an academic or personal productivity task.
+Responsibilities:
+•Store task details and deadlines
+•Track completion status and progress
+•Manage priorities and categories
+•Support task scheduling and reminders
+Key Attributes:
+•taskId, studentId, title, description
+•dueDate, priority, status, category
+Key Methods:
+•createTask(), completeTask(), updateTask()
+•calculateUrgency(), sendReminder()
+Relationships:
+•Association:Many-to-one with Student
+•Dependency:Used by TaskManager and ProductivityAnalyzer
+•Aggregation:Part of TaskManager collection
+1.1.7 7. EmergencyContact
+Purpose:Represents an emergency contact for crisis situations.
+Responsibilities:
+•Store contact information and relationship
+•Manage contact preferences and availability
+•Support emergency notification system
+•Maintain contact verification status
+Key Attributes:
+•contactId, studentId, name, phone, email
+•relationship, priority, isVerified
+Key Methods:
+•validateContact(), sendEmergencyAlert()
+•updateContactInfo()
+Relationships:
+•Association:Many-to-one with Student
+•Dependency:Used by EmergencyContactManager
+•Aggregation:Part of Student’s emergency contacts
+6
+MindMate: Assignment 02Group #12
+1.2 LAYER 2 — SERVICE LAYER (Business Logic)
+1.2.1 8. UserService
+Purpose:Handles user registration, authentication, and profile management.
+Responsibilities:
+•Register new users with validation
+•Authenticate login attempts and manage sessions
+•Handle password reset and security questions
+•Update user profiles and preferences
+Collaborators:
+•UserRepository, EncryptionService, JwtService
+•ValidationService, User
+1.2.2 9. MoodService
+Purpose:Orchestrates mood tracking and emotional analysis operations.
+Responsibilities:
+•Record and validate mood entries
+•Analyze mood patterns and trends
+•Detect burnout and stress indicators
+•Generate personalized mood insights
+Collaborators:
+•MoodRepository, BurnoutDetectionEngine
+•NotificationService, MoodEntry
+1.2.3 10. JournalService
+Purpose:Manages journal entry creation, storage, and analysis.
+Responsibilities:
+•Create and retrieve journal entries
+•Analyze emotional content in entries
+•Generate contextual writing prompts
+•Maintain journal entry privacy
+Collaborators:
+•JournalRepository, SentimentAnalysisService
+•JournalPromptGenerator, JournalEntry
+7
+MindMate: Assignment 02Group #12
+1.2.4 11. TaskService
+Purpose:Handles task management and productivity tracking.
+Responsibilities:
+•Create, update, and delete tasks
+•Analyze task completion patterns
+•Generate productivity suggestions
+•Manage task priorities and deadlines
+Collaborators:
+•TaskRepository, CalendarService
+•ProductivityAnalyzer, Task
+1.2.5 12. BurnoutDetectionEngine
+Purpose:Analyzes wellness data to detect burnout risk and provide early warnings.
+Responsibilities:
+•Analyze mood trends for burnout indicators
+•Monitor task overload and academic pressure
+•Calculate comprehensive burnout risk scores
+•Trigger proactive alerts and recommendations
+Collaborators:
+•MoodService, TaskService, NotificationService
+•Student, Advisor
+1.2.6 13. NotificationService
+Purpose:Manages and delivers system notifications and alerts.
+Responsibilities:
+•Queue and prioritize notification messages
+•Deliver alerts through multiple channels
+•Track notification delivery status
+•Manage user notification preferences
+Collaborators:
+•NotificationGateway, UserService
+•SMSService, EmailService, PushService
+8
+MindMate: Assignment 02Group #12
+1.3 LAYER 3 — REPOSITORY LAYER
+1.3.1 14. UserRepository
+Purpose:Handles database operations for User entities.
+Relationships:
+•Association:With User entity
+•Dependency:Uses DatabaseConnection
+1.3.2 15. MoodRepository
+Purpose:Manages persistence of MoodEntry objects and mood history.
+Relationships:
+•Association:With MoodEntry entity
+•Dependency:Uses DatabaseConnection
+1.3.3 16. JournalRepository
+Purpose:Handles storage and retrieval of JournalEntry objects.
+Relationships:
+•Association:With JournalEntry entity
+•Dependency:Uses DatabaseConnection
+1.3.4 17. TaskRepository
+Purpose:Manages persistence operations for Task entities.
+Relationships:
+•Association:With Task entity
+•Dependency:Uses DatabaseConnection
+1.3.5 18. EmergencyContactRepository
+Purpose:Handles database operations for EmergencyContact entities.
+Relationships:
+•Association:With EmergencyContact entity
+•Dependency:Uses DatabaseConnection
+9
+MindMate: Assignment 02Group #12
+1.4 LAYER 4 — CONTROLLER LAYER (API Endpoints)
+1.4.1 19. AuthController
+Endpoints:
+•signup(), login(), logout(), resetPassword()
+Relationships:
+•Association:With UserService
+•Dependency:Uses SignupRequestDTO, LoginRequestDTO
+1.4.2 20. MoodController
+Endpoints:
+•recordMood(), getMoodHistory(), getMoodInsights()
+Relationships:
+•Association:With MoodService
+•Dependency:Uses MoodRequestDTO, MoodResponseDTO
+1.4.3 21. JournalController
+Endpoints:
+•createEntry(), getEntries(), deleteEntry(), getPrompts()
+Relationships:
+•Association:With JournalService
+•Dependency:Uses JournalRequestDTO, JournalResponseDTO
+1.4.4 22. TaskController
+Endpoints:
+•createTask(), updateTask(), getTasks(), deleteTask()
+Relationships:
+•Association:With TaskService
+•Dependency:Uses TaskRequestDTO, TaskResponseDTO
+1.4.5 23. AdvisorController
+Endpoints:
+•getStudentWellness(), generateReport(), sendAlert()
+Relationships:
+•Association:With AdvisorService
+•Dependency:Uses ReportRequestDTO, AlertRequestDTO
+10
+MindMate: Assignment 02Group #12
+1.5 LAYER 5 — SECURITY LAYER
+1.5.1 24. JwtService
+Purpose:Handles JWT token generation, validation, and management.
+Responsibilities:
+•Generate secure JWT tokens for authentication
+•Validate token authenticity and expiration
+•Extract user claims and permissions from tokens
+•Manage token refresh cycles
+Relationships:
+•Association:With UserService
+•Dependency:Used by SecurityConfig and AuthController
+1.5.2 25. EncryptionService
+Purpose:Provides encryption, hashing, and data security utilities.
+Responsibilities:
+•Hash passwords using secure algorithms
+•Encrypt sensitive user data
+•Validate encrypted content integrity
+•Manage encryption keys securely
+Relationships:
+•Association:With UserRepository and MoodRepository
+•Dependency:Used by all services handling sensitive data
+1.5.3 26. SecurityConfig
+Purpose:Configures application security and access controls.
+Responsibilities:
+•Configure authentication and authorization rules
+•Protect API endpoints based on user roles
+•Manage CORS and CSRF protection
+•Set up security filters and interceptors
+Relationships:
+•Association:With JwtService and UserService
+•Dependency:Configures entire security infrastructure
+11
+MindMate: Assignment 02Group #12
+1.6 LAYER 6 — DTO LAYER
+1.6.1 27. LoginRequestDTO
+Purpose:Transfers login credentials from frontend to backend.
+Attributes:email, password, rememberMe
+1.6.2 28. SignupRequestDTO
+Purpose:Transfers user registration data between layers.
+Attributes:name, email, password, role, academicInfo
+1.6.3 29. MoodEntryDTO
+Purpose:Transfers mood entry data between presentation and service layers.
+Attributes:moodLevel, emotions, notes, timestamp, context
+1.6.4 30. JournalEntryDTO
+Purpose:Transfers journal content and metadata.
+Attributes:content, tags, moodContext, isPrivate, timestamp
+1.6.5 31. TaskRequestDTO
+Purpose:Transfers task creation and update data.
+Attributes:title, description, dueDate, priority, category
+1.6.6 32. WellnessReportDTO
+Purpose:Transfers anonymized wellness data to advisors.
+Attributes:studentId (anonymized), wellnessScore, riskLevel, trends
+12
+MindMate: Assignment 02Group #12
+2 TASK 2: CRC CARDS (CONCEPTUAL DESIGN)
+This section presents the CRC (Class-Responsibility-Collaborator) cards for the major
+classes in the MindMate system.
+2.1 CRC Card 1: User
+CRC Card
+User
+Responsibilities:
+•Manage user profile information
+•Store authentication credentials
+•Maintain user preferences
+•Handle profile updates
+Collaborators:
+•UserRepository
+•AuthenticationService
+•EncryptionService
+Notes:Base class for Student and Advisor; Abstract concept representing any
+system user
+13
+MindMate: Assignment 02Group #12
+2.2 CRC Card 2: Student
+CRC Card
+Student
+Responsibilities:
+•Track personal wellness data
+•Access mood tracking features
+•Create and manage journal entries
+•Manage productivity tasks
+•Access emergency contacts
+•Receive wellness alerts
+Collaborators:
+•MoodTracker
+•JournalManager
+•TaskManager
+•NotificationService
+•BurnoutDetectionEngine
+Notes:Inherits from User; Primary system user; Has aggregated collections of
+MoodEntry, JournalEntry, Task
+14
+MindMate: Assignment 02Group #12
+2.3 CRC Card 3: Advisor
+CRC Card
+Advisor
+Responsibilities:
+•View aggregated and anonymized student wellness trends
+•Receive alerts for students at high risk of burnout
+•Access a list of students needing outreach
+•Manage advisor-specific notes on student cases
+Collaborators:
+•Student
+•BurnoutDetectionEngine
+•NotificationService
+•AnalyticsService
+Notes:Inherits from User; Has a view into student wellness without accessing
+private details like journal entries
+15
+MindMate: Assignment 02Group #12
+2.4 CRC Card 4: MoodTracker
+CRC Card
+MoodTracker
+Responsibilities:
+•Provide interface for logging mood entries
+•Store and retrieve historical mood data
+•Calculate short-term mood trends
+•Trigger alerts for persistent low mood
+Collaborators:
+•Student
+•MoodEntry
+•AnalyticsService
+•BurnoutDetectionEngine
+Notes:Manages the lifecycle of MoodEntry objects. Central component for emo-
+tional state monitoring
+2.5 CRC Card 5: JournalManager
+CRC Card
+JournalManager
+Responsibilities:
+•Create, read, update, and delete journal entries
+•Tag entries with emotional or thematic labels
+•Provide search and filter functionality for past entries
+•Maintain journal entry privacy and access control
+Collaborators:
+•Student
+•JournalEntry
+•EncryptionService (for sensitive data)
+Notes:Handles all journal-related operations. Ensures that journal data is private
+to the Student
+16
+MindMate: Assignment 02Group #12
+2.6 CRC Card 6: TaskManager
+CRC Card
+TaskManager
+Responsibilities:
+•Create, assign due dates, and mark tasks as complete
+•Organize tasks into projects or categories
+•Provide reminders for upcoming or overdue tasks
+•Analyze task completion rates and workload
+Collaborators:
+•Student
+•Task
+•NotificationService
+•BurnoutDetectionEngine
+Notes:Helps students manage academic and personal productivity. Task data is
+used for burnout risk assessment
+17
+MindMate: Assignment 02Group #12
+2.7 CRC Card 7: BurnoutDetectionEngine
+CRC Card
+BurnoutDetectionEngine
+Responsibilities:
+•Analyze user data (mood, task load, journal sentiment) for risk patterns
+•Calculate a burnout risk score
+•Flag students who meet high-risk criteria
+•Notify the student and their advisor upon high-risk detection
+Collaborators:
+•Student
+•Advisor
+•MoodTracker
+•TaskManager
+•JournalManager (for sentiment analysis)
+•NotificationService
+Notes:The core ”intelligence” of the system. Uses a defined algorithm to proac-
+tively identify at-risk students
+18
+MindMate: Assignment 02Group #12
+2.8 CRC Card 8: NotificationService
+CRC Card
+NotificationService
+Responsibilities:
+•Send wellness alerts and reminders to students
+•Push high-risk burnout alerts to advisors
+•Manage notification preferences (e.g., email, in-app)
+•Schedule and queue outgoing messages
+Collaborators:
+•Student
+•Advisor
+•BurnoutDetectionEngine
+•TaskManager
+Notes:A central service for all outbound communication. Decouples the detection
+of events from the act of notifying users
+19
+MindMate: Assignment 02Group #12
+3 TASK 3: UML CLASS DIAGRAM (TECHNI-
+CAL DESIGN)
+This section presents the comprehensive UML Class Diagram for the MindMate system,
+showing all classes, their relationships, attributes, methods, and cardinality.
+Information
+Diagram Overview:The UML Class Diagram follows the six-layer architecture:
+1. Domain Layer (Core Business Objects)
+2. Service Layer (Business Logic)
+3. Repository Layer (Persistence)
+4. Controller Layer (API Endpoints)
+5. Security Layer (Authentication & Authorization)
+6. DTO Layer (Data Transfer Objects)
+20
+MindMate: Assignment 02Group #12
+3.1 UML Class Diagram Visualization
+Figure 1: MindMate System UML Class Diagram - Complete Architectural Overview
+3.2 Key Relationships in the UML Diagram
+1.Inheritance:Student and Advisor inherit from abstract User class
+2.Aggregation:Student aggregates (1:M) MoodEntry, JournalEntry, and Task col-
+lections
+3.Association:MoodService uses BurnoutDetectionEngine for analysis
+21
+MindMate: Assignment 02Group #12
+4.Dependency:Controllers depend on Service interfaces
+5.Composition:Repositories compose DatabaseConnection for persistence
+6.Realization:Services implement business logic interfaces
+3.3 Layer Descriptions
+3.3.1 Domain Layer
+Contains core business entities including User hierarchy (User, Student, Advisor), wellness
+tracking objects (MoodEntry, JournalEntry), and productivity objects (Task, Emergen-
+cyContact). This layer represents the fundamental business concepts.
+3.3.2 Service Layer
+Implements business logic with services (UserService, MoodService, JournalService, TaskSer-
+vice) and specialized engines (BurnoutDetectionEngine, NotificationService). This layer
+contains the core application logic.
+3.3.3 Repository Layer
+Follows Repository pattern with abstract Repository interface implemented by concrete
+repositories (UserRepository, MoodRepository, JournalRepository, TaskRepository). This
+layer handles all data persistence operations.
+3.3.4 Controller Layer
+Provides REST API endpoints (AuthController, MoodController, JournalController, TaskCon-
+troller, AdvisorController) acting as facades to services. This layer handles HTTP re-
+quests and responses.
+3.3.5 Security Layer
+Handles authentication and authorization (JwtService, EncryptionService, SecurityCon-
+fig) with cross-cutting security concerns. This layer ensures system security and access
+control.
+3.3.6 DTO Layer
+Manages data transfer between layers with request/response DTOs (LoginRequestDTO,
+MoodEntryDTO, JournalEntryDTO, TaskRequestDTO). This layer handles data trans-
+formation and validation.
+3.4 Design Pattern Integration in UML
+The UML diagram reflects the following design patterns:
+•Repository Pattern:Data Access Layer abstraction
+•Factory Pattern:Object creation in services
+22
+MindMate: Assignment 02Group #12
+•Strategy Pattern:BurnoutDetectionEngine analysis algorithms
+•Observer Pattern:NotificationService event handling
+•Adapter Pattern:External service integrations
+•Template Method Pattern:Workflow definitions in services
+•Facade Pattern:Controllers providing simplified interfaces
+Information
+Note:The UML diagram provides a comprehensive visual representation of the
+MindMate system architecture, showing all classes, relationships, and design pat-
+terns as described in the textual documentation. The diagram illustrates the clear
+separation of concerns across six architectural layers and demonstrates proper ap-
+plication of object-oriented design principles.
+23
+MindMate: Assignment 02Group #12
+4 TASK 4: DESIGN PATTERNS PLANNING
+The MindMate system implements 6 design patterns strategically distributed across cre-
+ational, structural, and behavioral categories to enhance maintainability, extensibility,
+and adherence to design principles.
+Pattern
+NamePattern
+TypeApplied To /
+ModuleProblem
+SolvedWhy This Pat-
+tern?
+Factory
+MethodCreational Notification
+System, Service
+CreationAvoids direct
+instantiation
+of concrete
+services; Cen-
+tralizes object
+creation logicAllows adding
+new service
+types with-
+out modifying
+client code
+(Open/Closed
+Principle)
+Singleton Creational DatabaseConnection,
+JwtService,
+Configura-
+tionServiceEnsures only
+one instance
+of critical re-
+sources exists;
+Prevents mul-
+tiple database
+connectionsProvides global
+access point; Re-
+duces resource
+overhead; En-
+sures consistent
+configuration
+Strategy Structural BurnoutDetectionEngine,
+ProductivityAn-
+alyzerDifferent anal-
+ysis algorithms
+needed; Con-
+ditional logic
+for algorithm
+selectionEnables swap-
+ping algorithms
+at runtime;
+Supports A/B
+testing; Easy to
+add new analysis
+methods
+Adapter Structural External APIs
+(SMSService,
+EmailService,
+PushService)Third-party
+APIs have
+incompatible
+interfaces; Need
+to standardize
+communicationStandardizes
+external ser-
+vice interfaces;
+Allows easy
+switching be-
+tween providers;
+Decouples
+system from
+external APIs
+Observer Behavioral Notification Sys-
+tem, Alert Man-
+agementMultiple com-
+ponents need to
+react to events;
+Tight coupling
+between event
+sources and
+listenersLoose coupling
+between event
+sources and
+listeners; Sup-
+ports multiple
+notification han-
+dlers; Enables
+extensible alert
+system
+24
+MindMate: Assignment 02Group #12
+Pattern
+NamePattern
+TypeApplied To /
+ModuleProblem
+SolvedWhy This Pat-
+tern?
+Template
+MethodBehavioral Burnout detec-
+tion workflow,
+Report genera-
+tionCommon al-
+gorithm steps
+with varia-
+tions in specific
+operations; Re-
+peated workflow
+patternsDefines algo-
+rithm skeleton
+with customiz-
+able steps;
+Promotes code
+reuse; Easy to
+modify specific
+steps without
+changing overall
+structure
+4.1 Pattern 1: Factory Method (Creational)
+Factory Method Pattern
+Applied To:NotificationSystem, ServiceFactory
+Problem Solved:
+•Avoids direct instantiation of concrete notification services
+•Eliminates tight coupling between client code and specific implementations
+•Centralizes object creation logic
+Why This Pattern?
+•Allows adding new notification types without modifying existing code
+•Encapsulates notification creation logic
+•Supports Open/Closed Principle
+•Simplifies unit testing with mock factories
+Implementation Strategy:NotificationFactory creates SMSService, EmailSer-
+vice, and PushNotificationService instances based on configuration. New notifi-
+cation channels can be added by implementing the NotificationHandler interface
+without changing existing factory code.
+25
+MindMate: Assignment 02Group #12
+4.2 Pattern 2: Singleton (Creational)
+Singleton Pattern
+Applied To:DatabaseConnection, JwtService, ConfigurationService
+Problem Solved:
+•Ensures only one instance of critical resources exists
+•Prevents multiple database connections and configuration conflicts
+•Controls resource overhead and memory usage
+•Provides global access point for shared resources
+Why This Pattern?
+•Thread-safe resource management
+•Consistent configuration access across application
+•Reduces memory footprint
+•Ensures single source of truth for critical services
+Implementation Strategy:DatabaseConnection uses double-checked locking to
+ensure thread safety. JwtService maintains single instance for consistent token
+validation. ConfigurationService loads settings once and provides global access.
+26
+MindMate: Assignment 02Group #12
+4.3 Pattern 3: Strategy (Structural)
+Strategy Pattern
+Applied To:BurnoutDetectionEngine, ProductivityAnalyzer
+Problem Solved:
+•Different algorithms for burnout detection can be swapped at runtime
+•Eliminates complex conditional statements for algorithm selection
+•Allows dynamic behavior changes based on context
+•Supports multiple analysis approaches simultaneously
+Why This Pattern?
+•Flexible analysis strategies based on data availability
+•Supports A/B testing different algorithms
+•Easy to add new analysis methods without modifying engine
+•Promotes algorithm encapsulation and reuse
+Implementation Strategy:Multiple BurnoutAnalysisStrategy implementations
+(ML-based, threshold-based, pattern-based) can be injected into BurnoutDetectio-
+nEngine. The engine delegates analysis to the current strategy without knowing
+implementation details.
+27
+MindMate: Assignment 02Group #12
+4.4 Pattern 4: Adapter (Structural)
+Adapter Pattern
+Applied To:External Integrations (SMSService, EmailService, PushService)
+Problem Solved:
+•Integrates third-party APIs with different interfaces
+•Standardizes external service communication
+•Enables switching between service providers without code changes
+•Handles API version differences and changes
+Why This Pattern?
+•Standardizes external service interfaces
+•Allows easy switching between providers (Twilio, Firebase, SendGrid)
+•Decouples system from external API specifics
+•Simplifies testing with mock adapters
+•Protects against third-party API changes
+Implementation Strategy:Adapter pattern wraps external SMS/Call APIs to
+conform to internal NotificationService interface. TwilioAdapter, FirebaseAdapter
+implement common SMSService interface. New providers only need to implement
+the adapter interface.
+28
+MindMate: Assignment 02Group #12
+4.5 Pattern 5: Observer (Behavioral)
+Observer Pattern
+Applied To:Notification System, Alert Management, Mood Tracking
+Problem Solved:
+•Multiple subscribers need to react to system events
+•Avoids tight coupling between event sources and listeners
+•Enables dynamic subscription/unsubscription at runtime
+•Supports one-to-many dependency relationships
+Why This Pattern?
+•Loose coupling between event sources and listeners
+•Supports multiple notification handlers for same event
+•Enables extensible alert system
+•Facilitates real-time updates and reactions
+•Easy to add new observers without modifying subjects
+Implementation Strategy:MoodEntry changes notify MoodAnalyzer, Burnout-
+DetectionEngine, and JournalPromptGenerator. BurnoutDetectionEngine notifies
+NotificationService and AdvisorDashboard when risk detected. Observers register
+with subjects and receive updates automatically.
+29
+MindMate: Assignment 02Group #12
+4.6 Pattern 6: Template Method (Behavioral)
+Template Method Pattern
+Applied To:Burnout detection workflow, Report generation, Authentication
+pipeline
+Problem Solved:
+•Common algorithm steps with variations in specific operations
+•Repeated workflow patterns across different contexts
+•Need to maintain consistent algorithm structure while allowing customization
+•Duplicate code in similar processes
+Why This Pattern?
+•Defines algorithm skeleton with customizable steps
+•Promotes code reuse across similar workflows
+•Easy to modify specific steps without changing overall structure
+•Ensures consistent process execution
+•Supports Hollywood Principle (”don’t call us, we’ll call you”)
+Implementation Strategy:Base BurnoutDetectionTemplate defines common
+steps: data collection→pattern analysis→risk calculation→alert decision.
+Specific implementations override analysis and calculation steps while inheriting
+the overall workflow structure.
+30
+MindMate: Assignment 02Group #12
+5 TASK 5: DESIGN PRINCIPLES AND SOLID
+COMPLIANCE
+This section demonstrates how fundamental design principles are applied throughout the
+MindMate system.
+5.1 (a) OOAD Design Principles Application
+5.1.1 1. Abstraction
+Definition:Abstraction hides complex implementation details and exposes only essential
+features to the user.
+Application in MindMate:
+MindMate applies abstraction throughout the system architecture. The abstractUser
+class defines the interface for all user types (Student, Advisor, Admin) without exposing
+implementation details specific to each role.
+Example
+Example: Service Abstraction
+TheNotificationServiceabstracts the underlying notification mechanisms. Stu-
+dents simply callsendNotification(message)without knowing whether it’s de-
+livered via SMS, push notification, or email. The complex routing logic is hidden
+behind a simple interface.
+Where Applied:User hierarchy, Repository interfaces, Service abstractions, Notifi-
+cationGateway, EncryptionService.
+Benefits:Enhanced maintainability, reduced cognitive load, ability to change imple-
+mentations without affecting clients, clear separation of concerns.
+5.1.2 2. Encapsulation
+Definition:Encapsulation bundles data and methods together, hiding internal state and
+exposing only necessary public interfaces.
+Application in MindMate:
+Each class in MindMate encapsulates its state and provides controlled access through
+public methods.
+Example
+Example: Student Class Encapsulation
+TheStudentclass maintains private lists ofmoodEntries,journalEntries,
+andtasks. These collections are not directly accessible; instead, students in-
+teract through public methods likerecordMood(),createJournalEntry(), and
+createTask(). This prevents accidental data corruption and ensures data integrity.
+Where Applied:All domain classes maintain private attributes with public accessor
+methods, repositories encapsulate database access logic, services encapsulate business
+operations.
+31
+MindMate: Assignment 02Group #12
+Benefits:Data integrity protection, prevents unauthorized state modification, en-
+ables validation on access, facilitates future changes to internal implementation.
+5.1.3 3. Inheritance
+Definition:Inheritance allows new classes to inherit properties and methods from ex-
+isting classes, promoting code reuse and establishing hierarchical relationships.
+Application in MindMate:
+The system uses inheritance to create a clear hierarchy of user types and repository
+patterns.
+Example
+User Hierarchy
+The abstractUserclass defines common attributes (userId,email,password,
+name) and methods (login(),logout(),updateProfile()) shared by all user
+types.
+Student,Advisor, andAdminclasses inherit fromUserand add role-specific at-
+tributes and methods while reusing common functionality.
+Where Applied:User type hierarchy (User→Student/Advisor/Admin), Reposi-
+tory implementations, DTO hierarchies.
+Benefits:Code reuse and reduced duplication, consistent interface across user types,
+extensibility for future user roles, polymorphic behavior support.
+5.1.4 4. Polymorphism
+Definition:Polymorphism allows objects of different types to be treated through the
+same interface, with each type implementing the interface in its own way.
+Application in MindMate:
+Polymorphism is extensively used throughout MindMate for service implementations
+and repository patterns.
+Example
+Example: Repository Polymorphism
+TheRepositoryinterface is polymorphically implemented byUserRepository,
+MoodEntryRepository,JournalEntryRepository, andTaskRepository. The
+business logic layer works withRepositoryobjects without knowing their con-
+crete types, allowing easy switching between different data storage solutions.
+Where Applied:User type implementations, Repository implementations, Notifi-
+cation handlers, Analysis strategies, Service implementations.
+Benefits:Flexibility in implementation, extensibility without code modification,
+loose coupling, support for runtime behavior changes, clean architecture.
+5.1.5 5. Cohesion & Coupling
+Definition:High cohesion means classes have focused, related responsibilities. Low
+coupling means minimal dependencies between classes.
+32
+MindMate: Assignment 02Group #12
+Application in MindMate:
+High Cohesion:
+Example
+Example: MoodService Class
+TheMoodServiceclass has a single, well-defined responsibility: managing mood-
+related operations. It includes only mood-specific methods (recordMood(),
+analyzeMoodPatterns(),generateMoodInsights()) and doesn’t handle unre-
+lated concerns like user authentication or task management.
+Low Coupling:
+Example
+Example: Dependency Injection
+Services receive their dependencies through constructor injection rather than cre-
+ating them directly. This reduces coupling and makes testing easier through mock
+dependencies.
+Where Applied:Module organization (Presentation, Domain, Data Access, Utili-
+ties), interface-based design, dependency injection, single-responsibility classes.
+Benefits:Improved maintainability, reduced testing complexity, enhanced reusabil-
+ity, easier debugging, development parallelization.
+5.2 (b) SOLID Principles Application
+5.2.1 1. Single Responsibility Principle (SRP)
+Principle Statement:A class should have only one reason to change, meaning it should
+have only one job or responsibility.
+Application in MindMate:
+Class Single Responsibility Changed When
+MoodService Managing mood operations
+onlyMood tracking re-
+quirements change
+BurnoutDetectionEngine Analyzing burnout indica-
+tors onlyBurnout detection al-
+gorithm changes
+NotificationService Handling notifications only Notification delivery
+methods change
+UserRepository Persisting user data only Database technology
+changes
+EncryptionService Encrypting data only Encryption standards
+change
+AuthController Handling authentication re-
+quests onlyAuthentication API
+changes
+Benefits:Classes are easier to understand, changes affect fewer components, easier
+to test in isolation, increased reusability.
+33
+MindMate: Assignment 02Group #12
+5.2.2 2. Open/Closed Principle (OCP)
+Principle Statement:Software entities should be open for extension but closed for
+modification.
+Application in MindMate:
+Scenario Solution OCP Compli-
+ance
+Adding new notifi-
+cation typesFactory pattern with Notifi-
+cationHandler interfaceNew types extend
+system without
+modifying Notifica-
+tionService
+Adding new analy-
+sis algorithmsStrategy pattern with Anal-
+ysisStrategyNew algorithms
+added without
+modifying engines
+Adding new user
+rolesExtend User abstract class New roles inherit
+without changing
+existing user logic
+Adding new report
+formatsTemplate method pattern New formats over-
+ride specific steps
+without changing
+report generation
+workflow
+Benefits:New features without breaking existing code, easier maintenance, reduced
+regression bugs, flexible and extensible system.
+5.2.3 3. Liskov Substitution Principle (LSP)
+Principle Statement:Subclasses should be substitutable for their base classes without
+breaking the system.
+Application in MindMate:
+Hierarchy LSP Compliance Why It Works
+User hierarchy Student/Advisor can re-
+place UserAll implement the
+same contract with
+consistent behavior
+Repository hier-
+archyAll repositories follow same
+interfaceAll implement CRUD
+operations identically
+Notification
+handlersAll handlers implement
+send() consistentlySame method signa-
+ture and return type
+expectations
+DTO hierarchy All DTOs follow data trans-
+fer contractConsistent serializa-
+tion/deserialization
+behavior
+Benefits:Reliable polymorphic designs, reduces coupling, enables safe substitution,
+supports runtime behavior changes.
+34
+MindMate: Assignment 02Group #12
+5.2.4 4. Interface Segregation Principle (ISP)
+Principle Statement:Clients should not be forced to depend on interfaces they don’t
+use.
+Application in MindMate:
+Problem Solution Benefit
+Fat UserManager
+interfaceSegregated into UserSer-
+vice, AuthService, Profile-
+ServiceEach service uses
+only needed meth-
+ods
+Monolithic Reposi-
+torySegregated into ReadRepos-
+itory and WriteRepositoryRead-only clients
+don’t implement
+write methods
+Generic Notifica-
+tionSegregated into EmailHan-
+dler, SMSHandler, Push-
+HandlerEach handler im-
+plements only re-
+quired notification
+type
+Benefits:Clients depend only on methods they use, easier to implement mock ob-
+jects, reduced coupling, improved code clarity.
+5.2.5 5. Dependency Inversion Principle (DIP)
+Principle Statement:High-level modules should not depend on low-level modules.
+Both should depend on abstractions.
+Application in MindMate:
+Example
+Repository Dependency Example
+High-level:BurnoutDetectionEnginedepends onMoodRepositoryinterface
+(abstraction)
+Low-level:PostgreSQLMoodRepositoryimplementsMoodRepositoryinterface
+(concrete implementation)
+The high-level business logic doesn’t depend on database specifics, and the low-level
+implementation depends on the abstraction.
+Where Applied:Service interfaces, Repository interfaces, Controller dependencies,
+Notification handlers.
+Benefits:High-level policies don’t depend on low-level details, easy to switch imple-
+mentations, improved testability, reduced coupling, supports different deployment sce-
+narios.
+35
+MindMate: Assignment 02Group #12
+SUBMISSION CHECKLIST
+Assignment Completeness
+Cover page with project title and team members’ names
+Table of contents
+Comprehensive class identification with 6-layer architecture
+Complete CRC Cards for all major classes (30+ CRC cards)
+UML Class Diagram with proper relationships and layers
+Design Pattern table with 6 patterns and detailed explanations
+OOAD principles application (Abstraction, Encapsulation, Inheritance, Poly-
+morphism, Cohesion & Coupling)
+SOLID principles compliance with specific examples
+Professional formatting and technical writing style
+Clear relationships and dependencies documented
+Date: November 18, 2025
+Institution: Ghulam Ishaq Khan Institute of Engineering
+Sciences and Technology (GIKI).
+36
