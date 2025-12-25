@@ -17,14 +17,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // ONLY redirect on 401 (Unauthorized). 
-        // 401 means the token is invalid, expired, or missing.
-        // 403 means "Forbidden" (you have a token, but lack permission). We should NOT logout on 403.
+        // Redirect only on 401 (Unauthorized) which means token is invalid/expired.
+        // 403 (Forbidden) means authenticated but no permission - DO NOT LOGOUT.
         if (error.response && error.response.status === 401) {
             const isAuthRequest = error.config && error.config.url.includes('/auth/');
 
             // Don't auto-logout if we are actively trying to log in
             if (!isAuthRequest) {
+                console.warn("Session expired or invalid. Redirecting to login.");
                 useAuthStore.getState().logout();
                 window.location.href = '/login';
             }

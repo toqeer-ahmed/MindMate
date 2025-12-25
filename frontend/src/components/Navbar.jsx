@@ -25,16 +25,17 @@ const Navbar = () => {
     }, [theme]);
 
     useEffect(() => {
-        if (token) {
+        // Only fetch alerts if user is logged in AND is a STUDENT
+        if (token && user?.role === 'STUDENT') {
             fetchAlerts();
             const interval = setInterval(fetchAlerts, 60000); // Poll every minute
             return () => clearInterval(interval);
         }
-    }, [token]);
+    }, [token, user]);
 
     const fetchAlerts = async () => {
         try {
-            const res = await api.get('/alerts');
+            const res = await api.get('/alerts/student');
             setAlerts(res.data);
             setUnreadCount(res.data.filter(a => !a.read).length);
         } catch (error) {
@@ -44,7 +45,7 @@ const Navbar = () => {
 
     const markAsRead = async (id) => {
         try {
-            await api.put(`/alerts/${id}/read`);
+            await api.put(`/alerts/student/${id}/read`);
             setAlerts(alerts.map(a => a.id === id ? { ...a, read: true } : a));
             setUnreadCount(prev => Math.max(0, prev - 1));
         } catch (error) {
@@ -102,8 +103,8 @@ const Navbar = () => {
                         {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
                     </button>
 
-                    {/* Notifications */}
-                    {token && (
+                    {/* Notifications (Only for Students) */}
+                    {token && user?.role === 'STUDENT' && (
                         <div className="relative">
                             <button
                                 onClick={() => setShowAlerts(!showAlerts)}

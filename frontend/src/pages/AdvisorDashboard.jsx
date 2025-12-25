@@ -40,7 +40,7 @@ const AdvisorDashboard = () => {
         if (!selectedStudent || !alertMessage.trim()) return;
         setIsSending(true);
         try {
-            await api.post(`/advisor/send-alert/${selectedStudent.studentId}`, {
+            await api.post(`/alerts/advisor/send/${selectedStudent.studentId}`, {
                 message: alertMessage
             });
             alert('Alert sent successfully!');

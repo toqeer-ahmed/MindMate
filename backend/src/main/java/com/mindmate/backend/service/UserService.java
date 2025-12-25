@@ -15,7 +15,6 @@ import com.mindmate.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -36,7 +35,7 @@ public class UserService {
                     .firstName(request.getFirstName())
                     .lastName(request.getLastName())
                     .email(request.getEmail())
-                    .password(encryptionService.encrypt(request.getPassword()))
+                    .password(encryptionService.hashPassword(request.getPassword()))
                     .role(Role.STUDENT)
                     .studentId(request.getStudentId())
                     .department(request.getDepartment())
@@ -47,7 +46,7 @@ public class UserService {
                     .firstName(request.getFirstName())
                     .lastName(request.getLastName())
                     .email(request.getEmail())
-                    .password(encryptionService.encrypt(request.getPassword()))
+                    .password(encryptionService.hashPassword(request.getPassword()))
                     .role(Role.ADVISOR)
                     .department(request.getDepartment())
                     .officeLocation(request.getOfficeLocation())

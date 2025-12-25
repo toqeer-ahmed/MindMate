@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -9,6 +9,11 @@ const Login = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
+    const logout = useAuthStore((state) => state.logout);
+
+    useEffect(() => {
+        logout();
+    }, []);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -62,6 +67,11 @@ const Login = () => {
                 <p className="mt-4 text-center text-gray-600">
                     Don't have an account? <Link to="/signup" className="text-primary hover:underline">Sign up</Link>
                 </p>
+                <div className="mt-4 pt-4 border-t border-gray-100 text-center">
+                    <p className="text-xs text-gray-400 mb-2">Test Accounts (Pre-loaded)</p>
+                    <button onClick={() => { setEmail('student@mindmate.com'); setPassword('password123'); }} className="text-xs text-blue-500 hover:underline mr-4">Student</button>
+                    <button onClick={() => { setEmail('advisor@mindmate.com'); setPassword('password123'); }} className="text-xs text-blue-500 hover:underline">Advisor</button>
+                </div>
             </div>
         </div>
     );

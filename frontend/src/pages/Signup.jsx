@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 import { useAuthStore } from '../store/authStore';
@@ -17,6 +17,11 @@ const Signup = () => {
     const [error, setError] = useState('');
     const navigate = useNavigate();
     const setAuth = useAuthStore((state) => state.setAuth);
+    const logout = useAuthStore((state) => state.logout);
+
+    useEffect(() => {
+        logout(); // ensure clean state
+    }, []);
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,7 +39,15 @@ const Signup = () => {
                 navigate('/dashboard');
             }
         } catch (err) {
-            setError('Registration failed. Try again.');
+            console.error(err);
+            if (err.response && err.response.status === 403) {
+                // If register returns 403, it might be a weird security config, but usually 500/409
+                setError('Registration failed. Access denied.');
+            } else if (err.response && err.response.status === 500) {
+                setError('Registration failed. Email might already exist.');
+            } else {
+                setError('Registration failed. Try again.');
+            }
         }
     };
 
