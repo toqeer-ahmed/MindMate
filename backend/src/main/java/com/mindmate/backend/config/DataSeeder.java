@@ -26,7 +26,10 @@ public class DataSeeder implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) throws Exception {
-        if (studentRepository.count() > 0) return;
+        // Only skip if our specific test user exists
+        if (studentRepository.findByEmail("student@mindmate.com").isPresent()) {
+            return;
+        }
 
         System.out.println("Seeding dummy data...");
 
@@ -46,7 +49,7 @@ public class DataSeeder implements CommandLineRunner {
         Student student = Student.builder()
                 .firstName("Toqeer")
                 .lastName("Ahmed")
-                .email("student@mindmate.com") // Changed specific email for demo
+                .email("student@mindmate.com")
                 .password(encryptionService.hashPassword("password123"))
                 .role(Role.STUDENT)
                 .studentId("FA21-BCS-001")
@@ -59,12 +62,17 @@ public class DataSeeder implements CommandLineRunner {
         createCourse(student, "Artificial Intelligence", 3, 92.0);
         createCourse(student, "Linear Algebra", 3, 78.5);
 
-        // 4. Add Mood Entries (Last 5 days)
+        // 4. Add Mood Entries (Last 10 days)
         createMood(student, 8.5, "Feeling great about the project!", 0); // Today
-        createMood(student, 5.0, "A bit tired.", 1); // Yesterday
+        createMood(student, 6.0, "A bit tired.", 1); // Yesterday
         createMood(student, 3.5, "Stressed due to deadlines.", 2);
         createMood(student, 7.0, "Recovering, good workout.", 3);
         createMood(student, 6.5, "Normal day.", 4);
+        createMood(student, 4.0, "Had a rough night sleep.", 5);
+        createMood(student, 8.0, "Productive study session.", 6);
+        createMood(student, 5.5, "Feeling okay, just average.", 7);
+        createMood(student, 2.0, "Very anxious about exams.", 8);
+        createMood(student, 9.0, "Celebrated birthday!", 9);
 
         // 5. Add Tasks
         createTask(student, "Submit SDA Assignment 3", "2025-12-28", "ACADEMIC", false);
